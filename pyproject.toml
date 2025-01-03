@@ -1,0 +1,57 @@
+[project]
+name = "flask-merchants"
+version = "2025.1.0"
+description = "Multipurpose payment platform for Flask-Admin"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "alembic>=1.14.0",
+    "flask>=3.1.0",
+    "flask-admin[sqlalchemy-with-utils,translation]>=2.0.0a3",
+    "flask-migrate>=4.0.7",
+    "flask-security[babel,common,fsqla]>=5.5.2",
+    "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.20",
+    "python-slugify>=8.0.4",
+    "sqlalchemy>=2.0.36",
+    "sqlalchemy-utils>=0.41.2",
+    "typing-extensions>=4.12.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.10.0",
+    "coverage>=7.6.10",
+    "flask-debugtoolbar>=0.16.0",
+    "hypothesis>=6.123.2",
+    "mkdocs-material>=9.5.49",
+    "mkdocstrings[python]>=0.27.0",
+    "pre-commit>=4.0.1",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-flask>=1.3.0",
+    "rich>=13.9.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["flask_merchants", "merchants", "store", "tests"]
+
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+python_files = ["test*.py"]
+
+
+[tool.black]
+line-length = 119
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.ruff]
+line-length = 119
+target-version = "py39"
