@@ -36,7 +36,7 @@ BABEL_DEFAULT_FOLDER = "store/translations"
 BABEL_DOMAIN = "merchants"
 LANGUAGES = {
     "en": {"flag": "us", "name": "English"},
-    "es": {"flag": "cl", "name": "Español"},
+    "es": {"flag": "mx", "name": "Español"},
 }
 
 # Flask Debugtoolbar
@@ -68,32 +68,8 @@ MAIL_PASSWORD = ""
 MAIL_TIMEOUT = 5
 MAIL_USE_LOCALTIME = True
 
-SITEMAP_INCLUDE_RULES_WITHOUT_PARAMS = True
-SITEMAP_URL_SCHEME = "https"
-SITEMAP_IGNORE_ENDPOINTS = [
-    "admin.index",
-    "security.logout",
-    "security.login",
-    "security.verify",
-    "user.action_view",
-    "user.ajax_lookup",
-    "user.ajax_update",
-    "user.create_view",
-    "user.delete_view",
-    "user.details_view",
-    "user.edit_view",
-    "user.export",
-    "user.index_view",
-    "role.index_view",
-    "role.ajax_lookup",
-    "role.create_view",
-    "role.edit_view",
-    "role.details_view",
-    "project.index_view",
-    "project.ajax_lookup",
-    "project.create_view",
-    "project.edit_view",
-    "project.details_view",
-    "debugtoolbar.sql_select",
-    "robots",
+ALLOWED_INTEGRATIONS = [
+    "merchants.integrations.dummy.FlaskAdminProvider",
+    "merchants.integrations.dummy.Provider",
+    "merchants.integrations.webpay.FlaskAdminProvider",
 ]

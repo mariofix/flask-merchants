@@ -1,8 +1,6 @@
 from typing import Optional
 
 from flask import Flask, request, session  # , url_for
-from flask_admin import AdminIndexView
-from flask_admin.contrib.sqla import ModelView
 from flask_babel import Babel
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -12,6 +10,8 @@ from flask_merchants.views import IntegrationAdmin, PaymentAdmin
 
 from .database import db, migrations
 from .model import Integration, Payment
+
+# from .store import StoreFront, StoreProductView, StoreCheckoutView
 
 
 def create_app(settings_file: Optional[str] = None):
@@ -31,6 +31,9 @@ def create_app(settings_file: Optional[str] = None):
     admin.init_app(app, endpoint="merchants")
     admin.add_view(PaymentAdmin(Payment, db.session))
     admin.add_view(IntegrationAdmin(Integration, db.session))
+    # admin.add_view(StoreFront())
+    # admin.add_view(StoreProductView())
+    # admin.add_view(StoreCheckoutView())
 
     # Flask-babel
     babel = Babel()
@@ -51,4 +54,6 @@ def create_app(settings_file: Optional[str] = None):
         default_translation_directories=app.config.get("BABEL_DEFAULT_FOLDER", "store/translations"),
     )
     # print(f"{app.extensions = }")
+
+    # app.register_blueprint(store_bp)
     return app
