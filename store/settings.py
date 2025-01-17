@@ -2,7 +2,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = ""
-DEBUG = False
+DEBUG = True
 LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
 TRUSTED_HOSTS = ["tardis.local"]
 SESSION_COOKIE_NAME = "merchants"
@@ -56,7 +56,7 @@ DEBUG_TB_PANELS = (
     "flask_debugtoolbar.panels.g.GDebugPanel",
 )
 TEMPLATES_AUTO_RELOAD = True
-EXPLAIN_TEMPLATE_LOADING = DEBUG
+EXPLAIN_TEMPLATE_LOADING = False
 
 
 # Flask-Mailman

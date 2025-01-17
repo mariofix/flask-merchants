@@ -1,9 +1,9 @@
 [project]
 name = "flask-merchants"
-version = "2025.1.0"
+version = "2025.2"
 description = "Multipurpose payment platform for Flask-Admin"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.9,<4.0"
 dependencies = [
     "alembic>=1.14.0",
     "flask>=3.1.0",
@@ -33,12 +33,16 @@ dev = [
     "rich>=13.9.4",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.poetry]
+packages = [
+    { include = "flask_merchants" },
+    { include = "merchants" },
+    { include = "store" },
+]
 
-[tool.hatch.build.targets.wheel]
-packages = ["flask_merchants", "merchants", "store", "tests"]
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 
 [tool.pytest.ini_options]

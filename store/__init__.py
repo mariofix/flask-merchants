@@ -1,19 +1,21 @@
 from typing import Optional
 
 from flask import Flask, request, session  # , url_for
+from flask_admin import AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_babel import Babel
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # from flask_merchants.routes import blueprint
 from flask_merchants.admin import admin
+from flask_merchants.views import IntegrationAdmin, PaymentAdmin
 
 from .database import db, migrations
 from .model import Integration, Payment
 
 
 def create_app(settings_file: Optional[str] = None):
-    app = Flask("Store")
+    app = Flask("Store", template_folder="store/templates")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     # Configure App, env takes precedence
@@ -26,9 +28,9 @@ def create_app(settings_file: Optional[str] = None):
     migrations.init_app(app, db, directory="store/migrations")
 
     # Flask-Admin
-    admin.init_app(app)
-    admin.add_view(ModelView(Payment, db.session))
-    admin.add_view(ModelView(Integration, db.session))
+    admin.init_app(app, endpoint="merchants")
+    admin.add_view(PaymentAdmin(Payment, db.session))
+    admin.add_view(IntegrationAdmin(Integration, db.session))
 
     # Flask-babel
     babel = Babel()
@@ -48,5 +50,5 @@ def create_app(settings_file: Optional[str] = None):
         default_domain=app.config.get("BABEL_DOMAIN", "merchants"),
         default_translation_directories=app.config.get("BABEL_DEFAULT_FOLDER", "store/translations"),
     )
-    print(f"{app.extensions = }")
+    # print(f"{app.extensions = }")
     return app
