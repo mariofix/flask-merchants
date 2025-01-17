@@ -7,7 +7,7 @@ This project is under development, not for production use.
 [![Python Versions](https://img.shields.io/pypi/pyversions/flask-merchants.svg)](https://pypi.org/project/flask-merchants/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A unified payment processing toolkit for Flask/Flask-Admin applications, inspired by [django-payments](jazzband/django-payments).
+A unified payment processing toolkit for Flask/Flask-Admin applications, inspired by [django-payments](https://github.com/jazzband/django-payments).
 
 ## Overview
 
