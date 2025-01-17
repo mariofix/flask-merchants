@@ -37,6 +37,16 @@ from flask_merchants import Merchants
 
 ```
 
+## Demo Store
+
+You can also try our demo store
+
+```bash
+docker run ghcr.io/mariofix/flask-merchants:latest
+```
+
+And open your browser to <localhost:5000>
+
 ## Documentation
 
 For detailed documentation, please visit [our documentation site](https://mariofix.github.io/flask-merchants).
