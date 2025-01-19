@@ -3,7 +3,7 @@ import uuid
 from decimal import Decimal
 from typing import Any, Optional
 
-from sqlalchemy import JSON, DateTime, Enum, Numeric, String
+from sqlalchemy import JSON, Boolean, DateTime, Enum, Numeric, String
 from sqlalchemy.orm import Mapped, declarative_mixin, mapped_column
 from sqlalchemy.sql import func
 
@@ -21,7 +21,7 @@ class IntegrationMixin:
     ___abstract__ = True
 
     slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    is_active: Mapped[bool] = True
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     integration_class: Mapped[str] = mapped_column(String(255), nullable=True)
     config: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
 
@@ -46,9 +46,21 @@ class PaymentMixin:
     integration_transaction: Mapped[Optional[str]] = mapped_column(String(255), index=True, nullable=True)
     integration_payload: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
     integration_response: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
-    creation: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    creation: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=func.now(),
+        server_default=func.now(),
+        insert_default=func.now(),
+    )
     last_update: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now(), server_default=func.now()
+        DateTime(timezone=True),
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+        server_onupdate=func.now(),
+        server_default=func.now(),
+        insert_default=func.now(),
     )
 
 

@@ -69,7 +69,9 @@ MAIL_TIMEOUT = 5
 MAIL_USE_LOCALTIME = True
 
 ALLOWED_INTEGRATIONS = [
-    "merchants.integrations.dummy.FlaskAdminProvider",
-    "merchants.integrations.dummy.Provider",
-    "merchants.integrations.webpay.FlaskAdminProvider",
+    "merchants.integrations.DummyProvider",
+    "merchants.integrations.cash.CashProvider",
+    "merchants.integrations.CashProvider",
 ]
+PAYMENT_MODEL = "model.store.Payment"
+INTEGRATION_MODEL = "model.store.Integration"
