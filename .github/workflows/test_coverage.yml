@@ -27,7 +27,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry" # Enable poetry caching
+          # cache: "poetry" # Enable poetry caching
 
       - name: Set Up Poetry
         uses: abatilo/actions-poetry@v4
