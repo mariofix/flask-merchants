@@ -5,12 +5,12 @@ from flask_babel import Babel
 from flask_debugtoolbar import DebugToolbarExtension
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from flask_merchants.core import FlaskMerchants
+from flask_merchants.core import FlaskMerchantsExtension
 
 from .database import db, migrations
+from .model import *  # noqa
 
-merchants = FlaskMerchants()
-toolbar = DebugToolbarExtension()
+merchants = FlaskMerchantsExtension()
 
 
 def create_app(settings_file: Optional[str] = None):
@@ -27,18 +27,12 @@ def create_app(settings_file: Optional[str] = None):
     migrations.init_app(app, db, directory="store/migrations")
 
     # Flask-Merchants
-    merchants.init_app(app)
-
-    # Flask-Admin
-    # admin.init_app(app, endpoint="merchants_old")
-    # admin.add_view(PaymentAdmin(Payment, db.session))
-    # admin.add_view(IntegrationAdmin(Integration, db.session))
-    # admin.add_view(StoreFront())
-    # admin.add_view(StoreProductView())
-    # admin.add_view(StoreCheckoutView())
+    merchants.init_app(app, db)
 
     # Flask-DebugToolbar
-    # toolbar.init_app(app)
+    if app.debug:
+        toolbar = DebugToolbarExtension()
+        toolbar.init_app(app)
 
     # Flask-babel
     babel = Babel()
@@ -58,6 +52,6 @@ def create_app(settings_file: Optional[str] = None):
         default_domain=app.config.get("BABEL_DOMAIN", "merchants"),
         default_translation_directories=app.config.get("BABEL_DEFAULT_FOLDER", "store/translations"),
     )
-    app.logger.info(f"{app.extensions = }")
+    # app.logger.info(f"{app.extensions = }")
 
     return app

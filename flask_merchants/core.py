@@ -19,7 +19,7 @@ class MerchantsError(Exception):
 
 def get_model(db, model_name):
     for model in db.Model.__subclasses__():
-        if model.__name__ == model_name:
+        if model and model.__name__ == model_name:
             return model
     return None
 
@@ -42,27 +42,22 @@ def get_integration_model(current_app: Optional[Any] = None, sqla: Optional[Any]
         raise MerchantsError(f"Can't find INTEGRATION_MODEL={model_config}")
 
 
-class FlaskMerchants:
+class FlaskMerchantsExtension:
     app: Optional[Any]
     payment_model: Optional[Any]
     integration_model: Optional[Any]
 
-    def __init__(self, app: Optional[Any] = None):
+    def __init__(self, app: Optional[Any] = None, db: Optional[Any] = None):
         if app:
-            self.init_app(app)
+            self.init_app(app, db)
 
-    def init_app(self, app):
+    def init_app(self, app, db=None):
         if hasattr(app, "extensions") and "flask_merchants" not in app.extensions:
             app.extensions["flask_merchants"] = self
         self.app = app
 
         # We need flask_sqlalchemy
-        try:
-            self.db = self.app.extensions["sqlalchemy"]
-        except KeyError:
-            raise MerchantsError(
-                "Can't find 'sqlalchemy' in flask's extensions, please load merchants after flask_sqlalchemy"
-            )
+        self.db = db
 
         # Check basic config stuff
         self.crosscheck()
@@ -74,20 +69,32 @@ class FlaskMerchants:
         # Flask-Admin
         admin.init_app(self.app)
 
-        # Get core models
-        self.payment_model = get_payment_model(self.app, self.db)
-        self.integration_model = get_integration_model(self.app, self.db)
-
         # Register ModelViews
         self.register_modelsviews()
 
     def crosscheck(self):
         if "PAYMENT_MODEL" not in self.app.config:
             raise MerchantsError("Please set up PAYMENT_MODEL= in your settings file or FLASK_PAYMENT_MODEL= env var.")
+        self.payment_model = self.app.config["PAYMENT_MODEL"]
+
         if "INTEGRATION_MODEL" not in self.app.config:
             raise MerchantsError(
                 "Please set up INTEGRATION_MODEL= in your settings file or FLASK_INTEGRATION_MODEL= env var."
             )
+        self.integration_model = self.app.config["INTEGRATION_MODEL"]
 
     def register_modelsviews(self):
-        pass
+        from .views import IntegrationAdmin, PaymentAdmin
+
+        admin.add_view(
+            PaymentAdmin(
+                get_model(self.db, self.payment_model.rsplit(".", 1).pop()),
+                self.db.session,
+            ),
+        )
+        admin.add_view(
+            IntegrationAdmin(
+                get_model(self.db, self.integration_model.rsplit(".", 1).pop()),
+                self.db.session,
+            ),
+        )

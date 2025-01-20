@@ -16,13 +16,13 @@ dependencies = [
     "sqlalchemy>=2.0.36",
     "sqlalchemy-utils>=0.41.2",
     "typing-extensions>=4.12.2",
+
 ]
 
 [project.optional-dependencies]
 dev = [
     "black>=24.10.0",
     "coverage>=7.6.10",
-    "flask-debugtoolbar>=0.16.0",
     "hypothesis>=6.123.2",
     "mkdocs-material>=9.5.49",
     "mkdocstrings[python]>=0.27.0",
@@ -31,6 +31,7 @@ dev = [
     "pytest-cov>=6.0.0",
     "pytest-flask>=1.3.0",
     "rich>=13.9.4",
+    "flask-debugtoolbar>=0.16.0",
 ]
 
 [tool.poetry]
@@ -54,7 +55,6 @@ python_files = ["test*.py"]
 [tool.black]
 line-length = 119
 target-version = ['py39']
-include = '\.pyi?$'
 
 [tool.ruff]
 line-length = 119

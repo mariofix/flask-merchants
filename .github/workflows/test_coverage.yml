@@ -2,7 +2,8 @@ name: Tests&Coverage
 
 on:
   push:
-    branches: ["sandbox"]
+    branches:
+      - main
 
 jobs:
   tests:
@@ -10,8 +11,8 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-        poetry-version: ["2.0.0"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        poetry-version: ["2.0.1"]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -24,8 +25,8 @@ jobs:
         uses: abatilo/actions-poetry@v4
         with:
           poetry-version: ${{ matrix.poetry-version }}
-      - name: Install merchants
-        run: poetry install --with dev
+      - name: Install everything
+        run: poetry install --all-extras
       - name: Run Tests and coverage
         run: poetry run coverage run -m pytest
       - name: Coverage report (xml)
