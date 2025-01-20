@@ -52,6 +52,5 @@ def create_app(settings_file: Optional[str] = None):
         default_domain=app.config.get("BABEL_DOMAIN", "merchants"),
         default_translation_directories=app.config.get("BABEL_DEFAULT_FOLDER", "store/translations"),
     )
-    # app.logger.info(f"{app.extensions = }")
 
     return app

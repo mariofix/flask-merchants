@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
 
-blueprint = Blueprint("merchants")
+blueprint = Blueprint("merchants", __name__)
 
 
 @blueprint.get("/")

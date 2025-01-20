@@ -62,35 +62,3 @@ class PaymentMixin:
         server_default=func.now(),
         insert_default=func.now(),
     )
-
-
-# @declarative_mixin
-# class PaymentEventMixin:
-#     ___abstract__ = True
-
-#     @classmethod
-#     def __declare_last__(cls):
-#         """
-#         From Claude: to add the event before_insert directly on the abstract model
-
-#         """
-
-#         event.listen(cls, "before_insert", cls.event_before_insert)
-
-#     @staticmethod
-#     def event_before_insert(mapper, connection, target):
-#         if target.status == "created":
-#             integration_info = get_integration(slug=target.integration_slug)
-#             try:
-#                 integration_class = getattr(integrations, integration_info["integration_class"])
-#                 integration = integration_class()
-#             except Exception as e:
-#                 raise e
-
-#             new_payment = integration.create_payment()
-
-#             target.integration_transaction = new_payment.get("token", None)
-#             target.status = PaymentStatus.processing
-#             target.integration_response = new_payment
-
-#             return target

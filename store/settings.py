@@ -1,7 +1,7 @@
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = ""
+SECRET_KEY: str
 DEBUG = True
 LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
 TRUSTED_HOSTS = ["tardis.local"]
@@ -12,22 +12,14 @@ SQLALCHEMY_RECORD_QUERIES = DEBUG
 SQLALCHEMY_ECHO = False
 SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 1800}
 
-SECURITY_EMAIL_SENDER = ""
-SECURITY_PASSWORD_SALT = ""
+SECURITY_EMAIL_SENDER = "Merchants"
+SECURITY_PASSWORD_SALT: str
 SECURITY_LOGIN_URL = "/login/"
 SECURITY_LOGOUT_URL = "/logout/"
 SECURITY_POST_LOGIN_VIEW = "/"
 SECURITY_POST_LOGOUT_VIEW = "/"
-SECURITY_AUTO_LOGIN_AFTER_CONFIRM = True
-SECURITY_ANONYMOUS_USER_DISABLED = True
-SECURITY_SEND_REGISTER_EMAIL = False
 SECURITY_USERNAME_ENABLE = True
 SECURITY_USERNAME_REQUIRED = True
-SECURITY_REGISTERABLE = False
-SECURITY_CONFIRMABLE = False
-SECURITY_RECOVERABLE = False
-SECURITY_OAUTH_ENABLE = False
-
 
 # Flask-Babel
 BABEL_DEFAULT_LOCALE = "en"
@@ -70,7 +62,6 @@ MAIL_USE_LOCALTIME = True
 
 ALLOWED_INTEGRATIONS = [
     "merchants.integrations.DummyProvider",
-    "merchants.integrations.cash.CashProvider",
     "merchants.integrations.CashProvider",
 ]
 PAYMENT_MODEL = "model.store.Payment"
