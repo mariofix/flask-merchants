@@ -55,7 +55,7 @@ jobs:
 
       - name: Build and push Docker image to GitHub Container Registry
         if: github.event_name == 'push'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
@@ -65,7 +65,7 @@ jobs:
 
       - name: Build and push release Docker image to GitHub Container Registry
         if: github.event_name == 'release'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
