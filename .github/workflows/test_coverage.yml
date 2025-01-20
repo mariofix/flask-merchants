@@ -65,6 +65,14 @@ jobs:
           coverage-reports: coverage.xml
           language: python
 
+      - name: Run Codacy Analysis CLI
+        uses: codacy/codacy-analysis-cli-action@v4
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          upload: true
+          format: text
+          verbose: true
+
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
