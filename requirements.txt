@@ -26,6 +26,7 @@ flask-babel==4.0.0
 Flask-DebugToolbar==0.16.0
 Flask-Login==0.6.3
 Flask-Mailman==1.1.1
+-e git+ssh://git@github.com/mariofix/flask-merchants.git@782e7ce793e847a32fc55ac6cb49c58f69d07b66#egg=flask_merchants
 Flask-Migrate==4.1.0
 Flask-Principal==0.4.0
 Flask-Security==5.5.2
@@ -63,7 +64,7 @@ pathspec==0.12.1
 platformdirs==4.3.6
 pluggy==1.5.0
 pre_commit==4.1.0
-psycopg2==2.9.10
+psycopg2-binary==2.9.10
 pycparser==2.22
 Pygments==2.19.1
 pymdown-extensions==10.14.2
