@@ -22,20 +22,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install .
-
-      # - name: Run tests
-      #   run: |
-      #     pytest
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -46,29 +32,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Define docker tags
-        id: vars
-        run: |
-          if [[ "${{matrix.python-version}}" == "3.12" ]]; then
-            echo "LATEST_TAG=latest" >> $GITHUB_ENV
-          fi
-
       - name: Build and push Docker image to GitHub Container Registry
-        if: github.event_name == 'push'
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
+          build-args: |
+            PYTHON_VERSION=${{ matrix.python-version }}-slim
           tags: |
             ghcr.io/mariofix/flask-merchants:${{ matrix.python-version }}
             ${{ matrix.python-version == '3.12' && 'ghcr.io/mariofix/flask-merchants:latest' || ''}}
-
-      - name: Build and push release Docker image to GitHub Container Registry
-        if: github.event_name == 'release'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/mariofix/flask-merchants:${{ github.event.release.tag_name }}
-            ghcr.io/mariofix/flask-merchants:${{matrix.python-version}}
