@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir .[dev,deploy]
 EXPOSE 80
 
 # Run app.py when the container launches
-CMD ["gunicorn", "-w", "4", "-b","0.0.0.0:80", "--forwarded-allow-ips=*", "--access-logfile", "-", "app:app"]
+CMD ["gunicorn", "-w", "4", "-b","0.0.0.0:80", "--forwarded-allow-ips=*", "--access-logfile", "-", "--log-level", "debug", "app:app"]
