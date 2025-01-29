@@ -4,7 +4,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY: str
 DEBUG = True
 LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
-TRUSTED_HOSTS = ["tardis.local"]
+TRUSTED_HOSTS = ["tardis.local", "merchants-store-flask.mariofix.com"]
 SESSION_COOKIE_NAME = "merchants"
 ADMIN_BASE_URL = "admin"
 SQLALCHEMY_DATABASE_URI = ""

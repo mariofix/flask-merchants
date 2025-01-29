@@ -16,7 +16,6 @@ dependencies = [
     "sqlalchemy>=2.0.36",
     "sqlalchemy-utils>=0.41.2",
     "typing-extensions>=4.12.2",
-    "psycopg2-binary (>=2.9.10,<3.0.0)",
 
 ]
 
@@ -34,6 +33,7 @@ dev = [
     "rich>=13.9.4",
     "flask-debugtoolbar>=0.16.0",
 ]
+deploy = ["gunicorn>=23.0.0,<24.0.0"]
 
 [tool.poetry]
 packages = [
