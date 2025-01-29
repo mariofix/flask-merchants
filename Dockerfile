@@ -9,13 +9,13 @@ WORKDIR /app
 COPY . /app
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir .[dev]
 
 # Make port 5000 available to the world outside this container
-EXPOSE 5000
+EXPOSE 80
 
 # Define environment variable
 ENV FLASK_APP=app.py
 
 # Run app.py when the container launches
-CMD ["flask", "run"]
+CMD ["flask", "run", "-p", "80", "--reload"]
