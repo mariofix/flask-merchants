@@ -1,6 +1,6 @@
 [project]
 name = "flask-merchants"
-version = "2025.2"
+version = "2025.3"
 description = "Multipurpose payment platform for Flask-Admin"
 readme = "README.md"
 requires-python = ">=3.9,<4.0"
@@ -16,6 +16,7 @@ dependencies = [
     "sqlalchemy>=2.0.36",
     "sqlalchemy-utils>=0.41.2",
     "typing-extensions>=4.12.2",
+    "psycopg2 (>=2.9.10,<3.0.0)",
 
 ]
 

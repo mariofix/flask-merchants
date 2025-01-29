@@ -6,5 +6,5 @@ from .views import MerchantsIndex
 admin = Admin(
     name="Merchants",
     theme=Bootstrap4Theme(swatch="pulse", fluid=True),
-    index_view=MerchantsIndex(url="/"),
+    index_view=MerchantsIndex(),
 )

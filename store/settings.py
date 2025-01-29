@@ -60,9 +60,17 @@ MAIL_PASSWORD = ""
 MAIL_TIMEOUT = 5
 MAIL_USE_LOCALTIME = True
 
-ALLOWED_INTEGRATIONS = [
+MERCHANTS_ALLOWED_INTEGRATIONS = [
     "merchants.integrations.DummyProvider",
     "merchants.integrations.CashProvider",
 ]
-PAYMENT_MODEL = "model.store.Payment"
-INTEGRATION_MODEL = "model.store.Integration"
+MERCHANTS_PAYMENT_MODEL = "model.store.Payment"
+MERCHANTS_INTEGRATION_MODEL = "model.store.Integration"
+
+STORE_SOCIALS = {
+    "youtube": "https://www.youtube.com/channel/channel-name",
+    "instagram": "https://www.instagram.com/instagram-user",
+    "facebook": "https://www.facebook.com/facebook-user",
+}
+STORE_BRAND_ICON = "bi bi-shop"
+STORE_NAME = "Storefront"

@@ -38,7 +38,7 @@ class IntegrationAdmin(AppAdmin, ModelView):
     }
 
     def _integration_class_validator(form, field):
-        allowed_integrations = current_app.config.get("ALLOWED_INTEGRATIONS", [])
+        allowed_integrations = current_app.config.get("MERCHANTS_ALLOWED_INTEGRATIONS", [])
 
         if not field.data:
             return

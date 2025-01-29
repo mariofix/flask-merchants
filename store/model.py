@@ -1,6 +1,9 @@
-from typing import Optional
+from decimal import Decimal
+from typing import Any, Optional
 
+from sqlalchemy import JSON, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy_utils.models import Timestamp
 from werkzeug.utils import import_string
 
 from flask_merchants.core import MerchantsError
@@ -56,3 +59,19 @@ class Payment(db.Model, PaymentMixin):
             return integration.create()
         except MerchantsError as err:
             raise err
+
+
+class Product(db.Model, Timestamp):
+    __tablename__ = "store_product"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    name: Mapped[Optional[str]] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    active: Mapped[bool] = mapped_column(default=True)
+    extra_attrs: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+
+    def __str__(self):
+        return f"{self.slug}"

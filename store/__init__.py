@@ -1,6 +1,6 @@
 from typing import Optional
 
-from flask import Flask, request, session  # , url_for
+from flask import Flask, render_template, request, session  # , url_for
 from flask_babel import Babel
 from flask_debugtoolbar import DebugToolbarExtension
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -8,13 +8,15 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_merchants.core import FlaskMerchantsExtension
 
 from .database import db, migrations
-from .model import *  # noqa
+from .model import *  # noqa: F403
+from .modules.storefront.route import storefront_bp
+from .views import ProductView
 
 merchants = FlaskMerchantsExtension()
 
 
 def create_app(settings_file: Optional[str] = None):
-    app = Flask("Store", template_folder="store/templates")
+    app = Flask("Store", template_folder="store/templates", static_folder="store/static")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     # Configure App, env takes precedence
@@ -28,6 +30,7 @@ def create_app(settings_file: Optional[str] = None):
 
     # Flask-Merchants
     merchants.init_app(app, db)
+    merchants.add_admin_model(Product, ProductView)  # noqa: F405
 
     # Flask-DebugToolbar
     if app.debug:
@@ -52,5 +55,17 @@ def create_app(settings_file: Optional[str] = None):
         default_domain=app.config.get("BABEL_DOMAIN", "merchants"),
         default_translation_directories=app.config.get("BABEL_DEFAULT_FOLDER", "store/translations"),
     )
+
+    @app.context_processor
+    def default_data() -> dict:
+        return {
+            "app_version": "2025.3",
+        }
+
+    app.register_blueprint(storefront_bp)
+
+    @app.get("/_storefront/")
+    def _storefront():
+        return render_template("store/storefront.html")
 
     return app
