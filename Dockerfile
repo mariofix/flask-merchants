@@ -1,5 +1,5 @@
 # Use the official image as a parent image
-ARG PYTHON_VERSION=3.9-slim
+ARG PYTHON_VERSION=3.12-slim
 FROM python:${PYTHON_VERSION}
 
 # Set the working directory in the container
@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir .[dev,deploy]
 EXPOSE 80
 
 # Run app.py when the container launches
-CMD ["gunicorn", "-w", "4", "-b","0.0.0.0:80", "--forwarded-allow-ips=*", "--access-logfile=-","app:app"]
+CMD ["gunicorn", "-w", "4", "-b","0.0.0.0:80", "--forwarded-allow-ips=*", "--access-logfile", "-", "app:app"]
