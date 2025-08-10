@@ -24,7 +24,7 @@ def get_model(db, model_name):
     return None
 
 
-def get_payment_model(current_app: Optional[Any] = None, sqla: Optional[Any] = None):
+def get_payment_model(current_app: Any | None = None, sqla: Any | None = None):
     model_config = current_app.config.get("MERCHANTS_PAYMENT_MODEL", None)
 
     try:
@@ -33,7 +33,7 @@ def get_payment_model(current_app: Optional[Any] = None, sqla: Optional[Any] = N
         raise MerchantsError(f"Can't find MERCHANTS_PAYMENT_MODEL={model_config}")
 
 
-def get_integration_model(current_app: Optional[Any] = None, sqla: Optional[Any] = None):
+def get_integration_model(current_app: Any | None = None, sqla: Any | None = None):
     model_config = current_app.config.get("MERCHANTS_INTEGRATION_MODEL", None)
 
     try:
@@ -43,11 +43,11 @@ def get_integration_model(current_app: Optional[Any] = None, sqla: Optional[Any]
 
 
 class FlaskMerchantsExtension:
-    app: Optional[Any]
-    payment_model: Optional[Any]
-    integration_model: Optional[Any]
+    app: Any | None
+    payment_model: Any | None
+    integration_model: Any | None
 
-    def __init__(self, app: Optional[Any] = None, db: Optional[Any] = None):
+    def __init__(self, app: Any | None = None, db: Any | None = None):
         if app:
             self.init_app(app, db)
 

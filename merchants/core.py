@@ -1,8 +1,12 @@
 from abc import ABC, abstractmethod
+from typing import Any
+
+import requests
 
 
 class CoreProvider(ABC):
     name: str = "core-provider"
+    client: Any = requests.Session
 
     @abstractmethod
     def create(self):

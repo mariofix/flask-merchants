@@ -66,12 +66,12 @@ class Product(db.Model, Timestamp):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    name: Mapped[Optional[str]] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     active: Mapped[bool] = mapped_column(default=True)
-    extra_attrs: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    extra_attrs: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     def __str__(self):
         return f"{self.slug}"

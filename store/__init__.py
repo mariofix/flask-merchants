@@ -15,7 +15,7 @@ from .views import ProductView
 merchants = FlaskMerchantsExtension()
 
 
-def create_app(settings_file: Optional[str] = None):
+def create_app(settings_file: str | None = None):
     app = Flask("Store", template_folder="store/templates", static_folder="store/static")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 

@@ -23,7 +23,7 @@ class IntegrationMixin:
     slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     integration_class: Mapped[str] = mapped_column(String(255), nullable=True)
-    config: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
 
 @declarative_mixin
@@ -36,16 +36,16 @@ class PaymentMixin:
     """
 
     ___abstract__ = True
-    merchants_token: Mapped[Optional[str]] = mapped_column(
+    merchants_token: Mapped[str | None] = mapped_column(
         String(255), nullable=False, unique=True, default=uuid.uuid4
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     status: Mapped[PaymentStatus] = mapped_column(Enum(PaymentStatus), default=PaymentStatus.created, index=True)
     integration_slug: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    integration_transaction: Mapped[Optional[str]] = mapped_column(String(255), index=True, nullable=True)
-    integration_payload: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
-    integration_response: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    integration_transaction: Mapped[str | None] = mapped_column(String(255), index=True, nullable=True)
+    integration_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    integration_response: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     creation: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
