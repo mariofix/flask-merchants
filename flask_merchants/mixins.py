@@ -1,7 +1,7 @@
 import datetime
 import uuid
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import JSON, Boolean, DateTime, Enum, Numeric, String
 from sqlalchemy.orm import Mapped, declarative_mixin, mapped_column
@@ -36,9 +36,7 @@ class PaymentMixin:
     """
 
     ___abstract__ = True
-    merchants_token: Mapped[str | None] = mapped_column(
-        String(255), nullable=False, unique=True, default=uuid.uuid4
-    )
+    merchants_token: Mapped[str | None] = mapped_column(String(255), nullable=False, unique=True, default=uuid.uuid4)
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     status: Mapped[PaymentStatus] = mapped_column(Enum(PaymentStatus), default=PaymentStatus.created, index=True)
