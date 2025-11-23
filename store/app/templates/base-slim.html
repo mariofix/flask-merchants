@@ -1,0 +1,125 @@
+{% block doc -%}
+<!doctype html>
+<html {% block html_attribs %}{% endblock html_attribs %}>
+  {%- block html %}
+
+  <head>
+    {%- block head %}
+    <title>{% block title %}{{ title|default }}{% endblock title %}</title>
+
+    {%- block metas %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    {%- endblock metas %}
+
+    {% block favicon %}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v=app_version)}}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png', v=app_version)}}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png', v=app_version)}}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=app_version)}}">
+    {% endblock favicon %}
+
+    {%- block head_scripts %}
+    {%- endblock head_scripts %}
+
+
+
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="{{ url_for('static', filename='tabler/css/tabler.css', v=app_version)}}" rel="stylesheet" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+    <!-- BEGIN PLUGINS STYLES -->
+    <link href="{{ url_for('static', filename='tabler/css/tabler-themes.css', v=app_version)}}" rel="stylesheet" />
+    <!-- END PLUGINS STYLES -->
+    <!-- BEGIN CUSTOM FONT -->
+    <style>
+      @import url("https://rsms.me/inter/inter.css");
+    </style>
+    <!-- END CUSTOM FONT -->
+    {%- block styles %}
+    {%- endblock styles %}
+
+    {%- endblock head %}
+  </head>
+
+  <body class="d-flex flex-column bg-white" {% block body_attribs %}{% endblock body_attribs %}>
+    {% block body -%}
+    <a href="#content" class="visually-hidden skip-link">Skip to main content</a>
+    <!-- BEGIN GLOBAL THEME SCRIPT -->
+    <script src="{{ url_for('static', filename='tabler/js/tabler-theme.js', v=app_version)}}"></script>
+    <!-- END GLOBAL THEME SCRIPT -->
+    <div class="row g-0 flex-fill">
+      <div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+        <div class="container container-tight my-5 px-lg-5">
+          {% block content -%}
+
+          <form action="./" method="get" autocomplete="off" novalidate>
+            <div class="mb-3">
+              <label class="form-label">Email address</label>
+              <input type="email" class="form-control" placeholder="your@email.com" autocomplete="off" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">
+                Password
+                <span class="form-label-description">
+                  <a href="./forgot-password.html">I forgot password</a>
+                </span>
+              </label>
+              <div class="input-group input-group-flat">
+                <input type="password" class="form-control" placeholder="Your password" autocomplete="off" />
+                <span class="input-group-text">
+                  <a href="#" class="link-secondary" title="Show password" data-bs-toggle="tooltip"><!-- Download SVG icon from http://tabler.io/icons/icon/eye -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-1">
+                      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                      <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                    </svg></a>
+                </span>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-check">
+                <input type="checkbox" class="form-check-input" />
+                <span class="form-check-label">Remember me on this device</span>
+              </label>
+            </div>
+            <div class="form-footer">
+              <button type="submit" class="btn btn-primary w-100">Sign in</button>
+            </div>
+          </form>
+          <div class="text-center text-secondary mt-3">Don't have account yet? <a href="./sign-up.html" tabindex="-1">Sign up</a></div>
+          {% endblock content -%}
+        </div>
+      </div>
+      <div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block">
+        <!-- Photo -->
+        <div class="bg-cover h-100 min-vh-100" style="background-image: url({{ url_for('static', filename='img/login-cover.jpg', v=app_version)}})"></div>
+      </div>
+    </div>
+
+    <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
+    <script src="{{ url_for('static', filename='tabler/js/tabler.min.js', v=app_version)}}" defer></script>
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+    <!-- BEGIN DEMO SCRIPTS -->
+    <script src="./preview/js/demo.min.js?1758561628" defer></script>
+    <!-- END DEMO SCRIPTS -->
+    <!-- BEGIN PAGE SCRIPTS -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var themeConfig = {
+          theme: "light",
+          "theme-base": "slate",
+          "theme-font": "sans-serif",
+          "theme-primary": "lime",
+          "theme-radius": "2",
+        };
+      });
+    </script>
+    <!-- END PAGE SCRIPTS -->
+    {% block scripts %}
+    {%- endblock scripts %}
+    {%- endblock body %}
+  </body>
+  {%- endblock html %}
+
+</html>
+{%- endblock doc -%}
