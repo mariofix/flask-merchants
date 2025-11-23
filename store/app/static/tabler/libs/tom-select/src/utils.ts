@@ -41,7 +41,7 @@ export const escape_html = (str:string):string => {
 
 
 /**
- * use setTimeout if timeout > 0 
+ * use setTimeout if timeout > 0
  */
 export const timeout = (fn:()=>void,timeout:number): number | null => {
 	if( timeout > 0 ){

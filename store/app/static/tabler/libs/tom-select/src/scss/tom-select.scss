@@ -125,11 +125,11 @@ $select-spinner-border-color:					$select-color-border !default;
 				border-width: $select-arrow-size $select-arrow-size 0 $select-arrow-size;
 				border-color: $select-arrow-color transparent transparent transparent;
 			}
-			
+
 			&:not(.rtl)::after {
 				right: $select-arrow-offset;
 			}
-			
+
 			&.rtl::after {
 				left: $select-arrow-offset;
 			}

@@ -28,7 +28,7 @@ const insertBefore = (referenceNode:Element, newNode:Element) => {
 }
 
 const isBefore = (referenceNode:Element|undefined|null, newNode:Element|undefined|null) =>{
-	
+
 	do{
 		newNode = newNode?.previousElementSibling;
 
@@ -71,11 +71,11 @@ export default function(this:TomSelect) {
 
 			const dragStart = (evt:Event) => {
 				drag_item = item;
-				
+
 				setTimeout(() => {
 					item.classList.add('ts-dragging');
 				}, 0);
-				
+
 			}
 
 			const dragOver = (evt:Event) =>{
@@ -90,7 +90,7 @@ export default function(this:TomSelect) {
 
 			const moveitem = (targetitem:TomItem, dragitem:TomItem|undefined) => {
 				if( dragitem === undefined ) return;
-				
+
 				if( isBefore(dragitem,item) ){
 					insertAfter(targetitem,dragitem);
 				}else{
@@ -114,7 +114,7 @@ export default function(this:TomSelect) {
 				});
 
 				self.setValue(values);
-			}	
+			}
 
 
 			addEvent(item,'mousedown', mousedown);
@@ -123,9 +123,9 @@ export default function(this:TomSelect) {
 			addEvent(item,'dragover', dragOver);
 			addEvent(item,'dragleave', dragLeave);
 			addEvent(item,'dragend', dragend);
-				
+
 			return item;
-		}	
+		}
 	});
 
 

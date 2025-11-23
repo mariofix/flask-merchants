@@ -11,7 +11,7 @@ class Region extends BaseComponent {
 
     const text = this.getLabelText(code, label)
 
-    // If label is passed and render function returns something 
+    // If label is passed and render function returns something
     if (label && text) {
       const bbox = this.shape.getBBox()
       const offsets = this.getLabelOffsets(code, label)
