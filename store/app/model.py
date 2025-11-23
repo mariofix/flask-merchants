@@ -1,6 +1,7 @@
 from decimal import Decimal
 from typing import Any, Optional
 
+from flask_security.models import fsqla_v3 as fsqla
 from sqlalchemy import JSON, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.models import Timestamp
@@ -8,13 +9,11 @@ from werkzeug.utils import import_string
 
 from flask_merchants.core import MerchantsError
 from flask_merchants.mixins import IntegrationMixin, PaymentMixin
-from flask_security.models import fsqla_v3 as fsqla
 
 from .database import db
 
 
 class Role(db.Model, fsqla.FsRoleMixin):
-
     def __str__(self):
         return f"{self.name}"
 

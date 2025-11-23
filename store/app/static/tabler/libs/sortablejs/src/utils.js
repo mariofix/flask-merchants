@@ -256,7 +256,7 @@ function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoS
 
 /**
  * Returns the content rect of the element (bounding rect minus border and padding)
- * @param {HTMLElement} el 
+ * @param {HTMLElement} el
  */
 function getContentRect(el) {
 	let rect = getRect(el);
