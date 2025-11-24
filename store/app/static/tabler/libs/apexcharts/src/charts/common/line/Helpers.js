@@ -127,7 +127,7 @@ export default class Helpers {
       prevY =
         lineYPosition -
         series[i][0] / this.lineCtx.yRatio[translationsIndex] +
-        (this.lineCtx.isReversed 
+        (this.lineCtx.isReversed
           ? series[i][0] / this.lineCtx.yRatio[translationsIndex] : 0) * 2
     } else {
       // the first value in the current series is null
