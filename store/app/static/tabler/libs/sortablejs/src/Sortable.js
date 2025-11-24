@@ -716,7 +716,7 @@ Sortable.prototype = /** @lends Sortable.prototype */ {
 		}
 
 		try {
-			
+
 			if (document.selection) {
 				_nextTick(() => {
 					document.selection.empty();

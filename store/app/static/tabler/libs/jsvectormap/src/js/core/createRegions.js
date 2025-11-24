@@ -10,7 +10,7 @@ export default function createRegions() {
       code: code,
       path: this._mapData.paths[code].path,
       style: merge({}, this.params.regionStyle),
-      labelStyle: this.params.regionLabelStyle, 
+      labelStyle: this.params.regionLabelStyle,
       labelsGroup: this._regionLabelsGroup,
       label: this.params.labels && this.params.labels.regions,
     })

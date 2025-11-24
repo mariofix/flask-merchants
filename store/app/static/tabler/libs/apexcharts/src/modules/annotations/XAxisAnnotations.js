@@ -46,7 +46,7 @@ export default class XAnnotations {
       let result = this.helpers.getX1X2('x2', anno)
       x2 = result.x
       clipX2 = result.clipped
-      
+
       if (!(clipX1 && clipX2)) {
         if (x2 < x1) {
           let temp = x1
