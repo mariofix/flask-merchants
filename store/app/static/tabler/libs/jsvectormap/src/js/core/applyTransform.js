@@ -30,7 +30,7 @@ export default function applyTransform() {
   }
 
   this.canvas.applyTransformParams(this.scale, this.transX, this.transY)
- 
+
   if (this._markers) {
     this._repositionMarkers()
   }

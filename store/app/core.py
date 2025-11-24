@@ -1,17 +1,17 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, render_template, url_for
-from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_admin import helpers as admin_helpers
 from flask_security.core import Security
 from flask_security.datastore import SQLAlchemyUserDatastore
-from flask_admin import helpers as admin_helpers
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-
+from .database import db, migrations
 from .extensions import babel, mail
 from .extensions.admin import admin
-from .database import db, migrations
 from .model import *  # noqa: F403
 from .version import __version__
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 
