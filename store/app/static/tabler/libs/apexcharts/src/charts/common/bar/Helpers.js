@@ -404,12 +404,12 @@ export default class Helpers {
 
     // Center the stroke on the coordinates
     let strokeCenter = strokeWidth / 2
-    
+
     const x1 = bXP + strokeCenter
     const x2 = bXP + bW - strokeCenter
 
     let direction = (series[i][j] >= 0 ? 1 : -1) * (isReversed ? -1 : 1)
-    
+
     // append tiny pixels to avoid exponentials (which cause issues in border-radius)
     y1 += 0.001 - strokeCenter * direction
     y2 += 0.001 + strokeCenter * direction
