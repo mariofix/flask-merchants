@@ -1,7 +1,8 @@
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+
 from ..database import db
-from ..model import User, Role, Category, ProductType, Product, Branch, BranchProduct, Settings
+from ..model import Branch, BranchProduct, Category, Product, ProductType, Role, Settings, User
 
 admin = Admin(name="Merchants Store", url="/data-manager")
 

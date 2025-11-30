@@ -18,7 +18,7 @@ Date range picker - lightweight, no dependencies
 * Mobile friendly (with plugin)
 * Predefined ranges (with plugin)
 * Multiple select (with plugin)
-  
+
 See more details in docs.
 
 # [Documentation](https://litepicker.com)
