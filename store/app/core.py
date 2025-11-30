@@ -10,6 +10,8 @@ from .extensions.admin import admin
 from .database import db, migrations
 from .model import *  # noqa: F403
 from .version import __version__
+from .apoderado.route import apoderado_bp
+from .routes import core_bp
 import os
 from dotenv import load_dotenv
 
@@ -36,7 +38,7 @@ def create_app():
         from flask_debugtoolbar import DebugToolbarExtension
 
         toolbar = DebugToolbarExtension()
-        # toolbar.init_app(app)
+        toolbar.init_app(app)
 
     # Setup Flask-Security
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -61,20 +63,7 @@ def create_app():
             "app_version": __version__,
         }
 
-    @app.get("/")
-    def storefront():
-        return render_template("store/dashboard.html")
-
-    @app.get("/abonar")
-    def abonar():
-        return render_template("store/abono.html")
-
-    @app.get("/ayuda")
-    def ayuda():
-        return render_template("store/ayuda.html")
-
-    @app.get("/configuracion")
-    def configuracion():
-        return render_template("store/configuracion.html")
+    app.register_blueprint(core_bp)
+    app.register_blueprint(apoderado_bp, url_prefix="/apoderado")
 
     return app

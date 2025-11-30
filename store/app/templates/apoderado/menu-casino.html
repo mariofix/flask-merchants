@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block page_header -%}
+<div class="page-header d-print-none text-white">
+  <div class="container-xl">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <!-- Page pre-title -->
+        <h1 class="page-title">Menu Semanal</h1>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock page_header -%}
+
+{% block page_body %}
+<main id="content" class="page-body">
+  <div class="container-xl">
+    <div class="card">
+      <div class="card-body">
+        <div id="calendar-default"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+{% endblock page_body %}
+
+{% block page_scripts -%}
+<script src="{{ url_for('static', filename='tabler/libs/fullcalendar/index.global.js', v=app_version)}}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var calendarEl = document.getElementById("calendar-default");
+    var currentYear = new Date().getFullYear();
+    var currentMonth = new Date().getMonth();
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      firstDay: 1,
+      events: [
+        {
+          title: "Cerrado",
+          start: new Date(currentYear, currentMonth, 2, 0, 0),
+          end: new Date(currentYear, currentMonth, 9, 23, 59),
+          color: "var(--tblr-red)",
+          borderColor: "var(--tblr-red-200)",
+        },
+        {
+          title: "Lentejas",
+          start: new Date(currentYear, currentMonth, 10, 13, 0),
+          end: new Date(currentYear, currentMonth, 10, 14, 00),
+        },
+        {
+          title: "Arroz con Bistec",
+          start: new Date(currentYear, currentMonth, 11, 13, 0),
+          end: new Date(currentYear, currentMonth, 11, 14, 0),
+        },
+        {
+          title: "Porotos con riendas",
+          start: new Date(currentYear, currentMonth, 12, 13, 0),
+          end: new Date(currentYear, currentMonth, 12, 14, 0),
+        },
+        {
+          title: "Pescado con ensalada",
+          start: new Date(currentYear, currentMonth, 13, 13, 0),
+          end: new Date(currentYear, currentMonth, 13, 14, 0),
+        },
+        {
+          title: "Pure con Hamburguesa",
+          start: new Date(currentYear, currentMonth, 14, 13, 0),
+          end: new Date(currentYear, currentMonth, 14, 14, 0),
+        },
+        {
+          title: "Cazuela",
+          start: new Date(currentYear, currentMonth, 15, 13, 0),
+          end: new Date(currentYear, currentMonth, 15, 14, 0),
+        },
+        {
+          title: "Wraps de Pollo/Carne",
+          start: new Date(currentYear, currentMonth, 16, 13, 0),
+          end: new Date(currentYear, currentMonth, 16, 14, 0),
+        },
+      ],
+    });
+    calendar.render();
+  });
+</script>
+{% endblock page_scripts -%}

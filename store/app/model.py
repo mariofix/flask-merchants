@@ -21,6 +21,8 @@ class Role(db.Model, fsqla.FsRoleMixin):
 
 class User(db.Model, fsqla.FsUserMixin):
     branches: Mapped[list["Branch"]] = relationship(back_populates="partner", cascade="all, delete-orphan")
+    settings: Mapped[list["Settings"]] = relationship(back_populates="user")
+    students: Mapped[list["Student"]] = relationship(back_populates="user")
 
     def __str__(self):
         return f"{self.username}"
@@ -158,3 +160,31 @@ class Product(db.Model, Timestamp):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class Settings(db.Model, Timestamp):
+    __tablename__ = "store_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[None | int] = mapped_column(ForeignKey("user.id"), nullable=True, default=None)
+    slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    active: Mapped[bool] = mapped_column(default=True)
+    value: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+
+    user: Mapped["User"] = relationship(back_populates="settings")
+
+    def __str__(self):
+        return f"{self.slug} - {self.user_id}"
+
+
+class Student(db.Model, Timestamp):
+    __tablename__ = "store_student"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    parent_id: Mapped[None | int] = mapped_column(ForeignKey("user.id"), nullable=True, default=None)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    daily_limit: Mapped[int] = mapped_column()
+    weekly_limit: Mapped[int] = mapped_column()
+
+    user: Mapped["User"] = relationship(back_populates="students")

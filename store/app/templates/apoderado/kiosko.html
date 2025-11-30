@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block page_header -%}
+<div class="page-header d-print-none text-white">
+  <div class="container-xl">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <!-- Page pre-title -->
+        <h1 class="page-title">Kiosko</h1>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock page_header -%}
+
+{% block page_body %}
+<main id="content" class="page-body">
+  <div class="container-xl">
+    <div class="row g-4">
+      <div class="col-md-3">
+        <form action="./" method="get" autocomplete="off" novalidate>
+          <div class="subheader mb-2 text-white">Categoria</div>
+          <nav class="list-group list-group-transparent mb-3">
+            <a class="list-group-item list-group-item-action d-flex align-items-center active" href="#">
+              Menu Casino
+              <small class="text-secondary ms-auto">24</small>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center" href="#">
+              Cafeteria
+              <small class="text-secondary ms-auto">11</small>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center" href="#">
+              Snacks
+              <small class="text-secondary ms-auto">11</small>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center" href="#">
+              Frutas
+              <small class="text-secondary ms-auto">54</small>
+            </a>
+          </nav>
+
+          <div class="subheader mb-2">Tags</div>
+          <div class="mb-3">
+            <label class="form-check">
+              <input type="checkbox" class="form-check-input" name="form-tags[]" value="business" checked />
+              <span class="form-check-label">business</span>
+            </label>
+            <label class="form-check">
+              <input type="checkbox" class="form-check-input" name="form-tags[]" value="evening" />
+              <span class="form-check-label">evening</span>
+            </label>
+            <label class="form-check">
+              <input type="checkbox" class="form-check-input" name="form-tags[]" value="leisure" />
+              <span class="form-check-label">leisure</span>
+            </label>
+            <label class="form-check">
+              <input type="checkbox" class="form-check-input" name="form-tags[]" value="party" />
+              <span class="form-check-label">party</span>
+            </label>
+          </div>
+          <div class="subheader mb-2">Nombre/Codigo</div>
+          <div>
+            <input type="text" class="form-control">
+          </div>
+          <div class="mt-5">
+            <button class="btn btn-primary btn-4 w-100">buscar
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="col-md-9">
+        <div class="row row-cards">
+          <div class="col-sm-6 col-lg-4">
+            <div class="card card-sm">
+              <a href="#" class="d-block"><img src="https://images.unsplash.com/photo-1555821768-54cd53df8983?q=80&w=1157&auto=format&fit=crop&ixlib=rb-4.1.0" class="card-img-top" /></a>
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div>
+                    <div>Menu Casino</div>
+                    <div class="text-secondary">$4.400</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-4">
+            <div class="card card-sm">
+              <a href="#" class="d-block"><img src="https://images.unsplash.com/photo-1641652682459-4e91a9af8e31?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0" class="card-img-top" /></a>
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+
+                  <div>
+                    <div>Super8</div>
+                    <div class="text-secondary">$500</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-4">
+            <div class="card card-sm">
+              <a href="#" class="d-block"><img src="https://plus.unsplash.com/premium_photo-1664283734034-9eac59c2bc7f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0" class="card-img-top" /></a>
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div>
+                    <div>Galletas Avena</div>
+                    <div class="text-secondary">$800</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-4">
+            <div class="card card-sm">
+              <a href="#" class="d-block"><img src="https://images.unsplash.com/photo-1607958996333-41aef7caefaa?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0" class="card-img-top" /></a>
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div>
+                    <div>Muffin Variedades</div>
+                    <div class="text-secondary">$1.800</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-4">
+            <div class="card card-sm">
+              <a href="#" class="d-block"><img src="https://images.unsplash.com/photo-1622597467836-f3285f2131b8?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0" class="card-img-top" /></a>
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div>
+                    <div>Jugo Variedades</div>
+                    <div class="text-secondary">$2.000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock page_body %}

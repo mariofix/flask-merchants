@@ -21,6 +21,7 @@
 
     <link href="{{ url_for('static', filename='tabler/css/tabler.css', v=app_version)}}" rel="stylesheet" />
     <link href="{{ url_for('static', filename='tabler/css/tabler-themes.css', v=app_version)}}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='tabler/css/tabler-payments.css', v=app_version)}}" rel="stylesheet" />
 
     <style>
       @import url("https://rsms.me/inter/inter.css");
@@ -33,16 +34,19 @@
     {%- endblock head %}
   </head>
 
-  <body class="layout-fluid">
+  <!-- <body class="layout-fluid"> -->
+
+  <body>
     <a href="#content" class="visually-hidden skip-link">Skip to main content</a>
     <!-- BEGIN GLOBAL THEME SCRIPT -->
     <script src="{{ url_for('static', filename='tabler/js/tabler-theme.js', v=app_version)}}"></script>
     <!-- END GLOBAL THEME SCRIPT -->
     <div class="page">
 
-      <!--  BEGIN SIDEBAR  -->
-      {% include "sidebar.html" %}
-      <!--  END SIDEBAR  -->
+
+      <!--  BEGIN NAVBAR  -->
+      {% include "menu/apoderado.html" %}
+      <!--  END NAVBAR  -->
 
       <div class="page-wrapper">
 
