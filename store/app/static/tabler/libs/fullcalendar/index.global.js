@@ -7207,7 +7207,7 @@ var FullCalendar = (function (exports) {
             return (y(ContentContainer, { elRef: props.elRef, elTag: props.elTag, elAttrs: Object.assign(Object.assign({}, props.elAttrs), (renderProps.isDisabled ? {} : { 'data-date': formatDayString(props.date) })), elClasses: [
                     ...getDayClassNames(renderProps, context.theme),
                     ...(props.elClasses || []),
-                ], elStyle: props.elStyle, renderProps: renderProps, generatorName: "dayCellContent", customGenerator: options.dayCellContent, defaultGenerator: props.defaultGenerator, classNameGenerator: 
+                ], elStyle: props.elStyle, renderProps: renderProps, generatorName: "dayCellContent", customGenerator: options.dayCellContent, defaultGenerator: props.defaultGenerator, classNameGenerator:
                 // don't use custom classNames if disabled
                 renderProps.isDisabled ? undefined : options.dayCellClassNames, didMount: options.dayCellDidMount, willUnmount: options.dayCellWillUnmount }, props.children));
         }
@@ -7779,7 +7779,7 @@ var FullCalendar = (function (exports) {
         moreLinkText: 'more',
         noEventsText: 'No events to display',
     };
-    const RAW_EN_LOCALE = Object.assign(Object.assign({}, MINIMAL_RAW_EN_LOCALE), { 
+    const RAW_EN_LOCALE = Object.assign(Object.assign({}, MINIMAL_RAW_EN_LOCALE), {
         // Includes things we don't want other locales to inherit,
         // things that derive from other translatable strings.
         buttonHints: {
@@ -13883,7 +13883,7 @@ var FullCalendar = (function (exports) {
             }
             return segs.map((seg, i) => (y(NowIndicatorContainer
             // key doesn't matter. will only ever be one
-            , { 
+            , {
                 // key doesn't matter. will only ever be one
                 key: i, elClasses: ['fc-timegrid-now-indicator-line'], elStyle: {
                     top: slatCoords.computeDateTop(seg.start, date),

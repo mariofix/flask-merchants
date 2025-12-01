@@ -1,8 +1,7 @@
 from flask_migrate import Migrate
+from flask_security.models import fsqla_v3 as fsqla
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
-from flask_security.models import fsqla_v3 as fsqla
-
 
 metadata = MetaData(
     naming_convention={
