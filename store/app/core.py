@@ -11,6 +11,7 @@ from .database import db, migrations
 from .model import *  # noqa: F403
 from .version import __version__
 from .apoderado.route import apoderado_bp
+from .pos.routes import pos_bp
 from .routes import core_bp
 import os
 from dotenv import load_dotenv
@@ -38,7 +39,7 @@ def create_app():
         from flask_debugtoolbar import DebugToolbarExtension
 
         toolbar = DebugToolbarExtension()
-        toolbar.init_app(app)
+        # toolbar.init_app(app)
 
     # Setup Flask-Security
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -65,5 +66,6 @@ def create_app():
 
     app.register_blueprint(core_bp)
     app.register_blueprint(apoderado_bp, url_prefix="/apoderado")
+    app.register_blueprint(pos_bp, url_prefix="/pos")
 
     return app
