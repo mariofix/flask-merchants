@@ -20,11 +20,6 @@
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=app_version)}}">
     {% endblock favicon %}
 
-    {%- block head_scripts %}
-    {%- endblock head_scripts %}
-
-
-
     <!-- BEGIN GLOBAL MANDATORY STYLES -->
     <link href="{{ url_for('static', filename='tabler/css/tabler.css', v=app_version)}}" rel="stylesheet" />
     <!-- END GLOBAL MANDATORY STYLES -->
@@ -38,6 +33,14 @@
     <!-- END CUSTOM FONT -->
     {%- block styles %}
     {%- endblock styles %}
+
+    {%- block head_styles %}
+    {%- endblock head_styles %}
+
+    {%- block head_scripts %}
+    {%- endblock head_scripts %}
+
+
 
     {%- endblock head %}
   </head>
