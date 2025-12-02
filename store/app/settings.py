@@ -81,3 +81,9 @@ STORE_SOCIALS = {
 }
 STORE_BRAND_ICON = "bi bi-shop"
 STORE_NAME = "Storefront"
+
+CELERY = {
+    "broker_url": "redis://10.0.0.3/10",
+    "result_backend": "redis://10.0.0.3/11",
+    "task_ignore_result": False,
+}

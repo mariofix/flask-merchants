@@ -1,0 +1,312 @@
+{% extends "base-pos.html" %}
+
+{% block page_header -%}
+<div class="page-header d-print-none text-white">
+  <div class="container-xl">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <!-- Page pre-title -->
+        <h1 class="page-title">Punto de Venta Casino</h1>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock page_header -%}
+
+{% block page_body %}
+<div class="container-xl">
+  <div class="row row-deck row-cards">
+    <div class="col-sm-12 col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="alert alert-lime" role="alert">
+            <h4 class="alert-title">Lector POS Casino</h4>
+            <div class="font-weight-medium">Acerca el tag del alumno al lector!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12">
+      <div class="row row-cards">
+        <div class="col-sm-6 col-lg-3">
+          <div class="card card-sm">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-auto">
+                  <span class="bg-primary text-white avatar"><!-- Download SVG icon from http://tabler.io/icons/icon/currency-dollar -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-1">
+                      <path d="M16.7 8a3 3 0 0 0 -2.7 -2h-4a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6h-4a3 3 0 0 1 -2.7 -2" />
+                      <path d="M12 3v3m0 12v3" />
+                    </svg></span>
+                </div>
+                <div class="col">
+                  <div class="font-weight-medium">Juan Carlos Bodoque</div>
+                  <div class="text-secondary">6-A</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card card-sm">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-auto">
+                  <span class="bg-green text-white avatar"><!-- Download SVG icon from http://tabler.io/icons/icon/shopping-cart -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon icon-1">
+                      <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                      <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                      <path d="M17 17h-11v-14h-2" />
+                      <path d="M6 5l14 1l-1 7h-13" />
+                    </svg></span>
+                </div>
+                <div class="col">
+                  <div class="font-weight-medium">9 almuerzos disponibles.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card card-sm">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-auto">
+                  <span class="bg-success text-white avatar"><!-- Download SVG icon from http://tabler.io/icons/icon/brand-x -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
+                      <path d="M5 12l5 5l10 -10" />
+                    </svg></span>
+                </div>
+                <div class="col">
+                  <div class="font-weight-medium">Habilitado</div>
+                  <div class="text-secondary">No ha canjeado hoy</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card card-sm">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-auto">
+                  <a href="" class="btn btn-success btn-lg w-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
+                      <path d="M5 12l5 5l10 -10" />
+                    </svg>Canjear Almuerzo</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <div class="col-md-12 col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Ultimas Compras</h3>
+        </div>
+        <div class="card-table table-responsive">
+          <table class="table table-vcenter">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Curso</th>
+                <th>Hora</th>
+                <th>Via</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tr>
+              <td>Juanin Juan Harry</td>
+              <td class="text-secondary">7B</td>
+              <td class="text-secondary">13:01</td>
+              <td class="text-secondary">Tag</td>
+              <td class="text-end">
+                <a href="{{ url_for('apoderado.ficha', id=67)}}" class="btn btn-info btn-sm">Detalles</a>
+
+              </td>
+            </tr>
+            <tr>
+              <td>Mario Hugo</td>
+              <td class="text-secondary">6A</td>
+              <td class="text-secondary">13:00</td>
+              <td class="text-secondary">Tag</td>
+              <td class="text-end">
+                <a href="{{ url_for('apoderado.ficha', id=67)}}" class="btn btn-info btn-sm">Detalles</a>
+
+              </td>
+            </tr>
+            <tr>
+              <td>Mico el Micofono</td>
+              <td class="text-secondary">6B</td>
+              <td class="text-secondary">13:00</td>
+              <td class="text-secondary">Manual</td>
+              <td class="text-end">
+                <a href="{{ url_for('apoderado.ficha', id=67)}}" class="btn btn-info btn-sm">Detalles</a>
+
+              </td>
+            </tr>
+            <tr>
+              <td>Freddy Turbina</td>
+              <td class="text-secondary">7A</td>
+              <td class="text-secondary">13:00</td>
+              <td class="text-secondary">Tag</td>
+              <td class="text-end">
+                <a href="{{ url_for('apoderado.ficha', id=67)}}" class="btn btn-info btn-sm">Detalles</a>
+
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Ingreso Manual</h3>
+        </div>
+        <div class="card-body">
+          <div class="row mb-2">
+            <div class="col-12">
+              <input type="text" placeholder="Ingrese nombre de alumno" class="form-control" />
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="d-flex">
+            <a href="#" class="btn btn-link">Limpiar</a>
+            <a href="#" class="btn btn-success ms-auto">Canjear Almuerzo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock page_body -%}
+
+
+{% block page_scripts -%}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    window.ApexCharts &&
+      new ApexCharts(document.getElementById("sparkline-activity"), {
+        chart: {
+          type: "radialBar",
+          fontFamily: "inherit",
+          height: 40,
+          width: 40,
+          animations: {
+            enabled: false,
+          },
+          sparkline: {
+            enabled: true,
+          },
+        },
+        tooltip: {
+          enabled: false,
+        },
+        plotOptions: {
+          radialBar: {
+            hollow: {
+              margin: 0,
+              size: "69%",
+            },
+            track: {
+              margin: 0,
+            },
+            dataLabels: {
+              show: false,
+            },
+          },
+        },
+        colors: ["var(--tblr-primary)"],
+        series: [35],
+      }).render();
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    window.ApexCharts &&
+      new ApexCharts(document.getElementById("chart-development-activity"), {
+        chart: {
+          type: "area",
+          fontFamily: "inherit",
+          height: 192,
+          sparkline: {
+            enabled: false,
+          },
+          animations: {
+            enabled: false,
+          },
+        },
+        dataLabels: {
+          enabled: true,
+        },
+        fill: {
+          colors: ["color-mix(in srgb, transparent, var(--tblr-primary) 16%)", "color-mix(in srgb, transparent, var(--tblr-primary) 16%)"],
+          type: "solid",
+        },
+        stroke: {
+          width: 2,
+          lineCap: "round",
+          curve: "smooth",
+        },
+        series: [
+          {
+            name: "Compras",
+            data: [1300, 1100, 1300, 1250, 900, 1050, 1530, 760, 1300, 1250, 1190, 1100, 950, 1200],
+          },
+        ],
+        tooltip: {
+          theme: "dark",
+        },
+        grid: {
+          strokeDashArray: 4,
+        },
+        xaxis: {
+          labels: {
+            padding: 0,
+          },
+          tooltip: {
+            enabled: false,
+          },
+          axisBorder: {
+            show: false,
+          },
+          type: "datetime",
+        },
+        yaxis: {
+          labels: {
+            padding: 4,
+          },
+        },
+        labels: [
+          "2020-06-20",
+          "2020-06-21",
+          "2020-06-22",
+          "2020-06-23",
+          "2020-06-24",
+          "2020-06-25",
+          "2020-06-26",
+          "2020-06-27",
+          "2020-06-28",
+          "2020-06-29",
+          "2020-06-30",
+          "2020-07-01",
+          "2020-07-02",
+          "2020-07-03",
+        ],
+        colors: ["color-mix(in srgb, transparent, var(--tblr-primary) 100%)"],
+        legend: {
+          show: true,
+        },
+        point: {
+          show: true,
+        },
+      }).render();
+  });
+</script>
+{% endblock page_scripts -%}

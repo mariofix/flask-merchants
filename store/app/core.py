@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for
+from flask import Flask, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_security.core import Security
 from flask_security.datastore import SQLAlchemyUserDatastore
@@ -7,12 +7,14 @@ from flask_admin import helpers as admin_helpers
 
 from .extensions import babel, mail
 from .extensions.admin import admin
+from .celery import celery_init_app
 from .database import db, migrations
 from .model import *  # noqa: F403
 from .version import __version__
 from .apoderado.route import apoderado_bp
 from .pos.routes import pos_bp
 from .routes import core_bp
+from .tasks import MyMailUtil
 import os
 from dotenv import load_dotenv
 
@@ -35,15 +37,18 @@ def create_app():
     migrations.init_app(app, db, directory="app/migrations")
     admin.init_app(app)
 
+    # Celery
+    celery_init_app(app)
+
     if app.debug:
         from flask_debugtoolbar import DebugToolbarExtension
 
         toolbar = DebugToolbarExtension()
-        # toolbar.init_app(app)
+        toolbar.init_app(app)
 
     # Setup Flask-Security
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
-    security = Security(app, user_datastore)
+    security = Security(app, user_datastore, mail_util_cls=MyMailUtil)
 
     # Flask-Mailman
     mail.init_app(app)

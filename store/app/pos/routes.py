@@ -11,3 +11,8 @@ def index():
 @pos_bp.route("/venta", methods=["GET"])
 def venta():
     return render_template("pos/venta.html")
+
+
+@pos_bp.route("/casino", methods=["GET"])
+def casino():
+    return render_template("pos/casino.html")
