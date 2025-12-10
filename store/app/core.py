@@ -44,7 +44,7 @@ def create_app():
         from flask_debugtoolbar import DebugToolbarExtension
 
         toolbar = DebugToolbarExtension()
-        toolbar.init_app(app)
+        # toolbar.init_app(app)
 
     # Setup Flask-Security
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)

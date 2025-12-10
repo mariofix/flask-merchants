@@ -22,6 +22,7 @@
     <link href="{{ url_for('static', filename='tabler/css/tabler.css', v=app_version)}}" rel="stylesheet" />
     <link href="{{ url_for('static', filename='tabler/css/tabler-themes.css', v=app_version)}}" rel="stylesheet" />
     <link href="{{ url_for('static', filename='tabler/css/tabler-payments.css', v=app_version)}}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='tabler/libs/tom-select/css/tom-select.bootstrap5.min.css', v=app_version)}}" rel="stylesheet" />
 
     <style>
       @import url("https://rsms.me/inter/inter.css");
@@ -183,10 +184,10 @@
 
     <!-- BEGIN PAGE LIBRARIES -->
     <script src="{{ url_for('static', filename='tabler/libs/apexcharts/apexcharts.min.js', v=app_version)}}" defer></script>
-
+    <script src="{{ url_for('static', filename='tabler/libs/tom-select/js/tom-select.complete.min.js', v=app_version)}}" defer></script>
     <!-- END PAGE LIBRARIES -->
     <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
-    <script src="{{ url_for('static', filename='tabler/js/tabler.min.js', v=app_version)}}" defer></script>
+    <script src="{{ url_for('static', filename='tabler/js/tabler.js', v=app_version)}}" defer></script>
     <!-- END GLOBAL MANDATORY SCRIPTS -->
     <!-- BEGIN DEMO SCRIPTS -->
     <script src="{{ url_for('static', filename='tabler/preview/js/demo.min.js', v=app_version)}}" defer></script>
