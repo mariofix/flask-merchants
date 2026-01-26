@@ -1,6 +1,3 @@
-import unittest
-import json
-
 from .controller import ApoderadoController
 
 

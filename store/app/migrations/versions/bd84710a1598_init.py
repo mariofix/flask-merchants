@@ -6,10 +6,9 @@ Create Date: 2025-11-14 04:09:42.063609
 
 """
 
-from alembic import op
 import flask_security
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "bd84710a1598"

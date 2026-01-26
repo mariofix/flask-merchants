@@ -671,7 +671,7 @@ class $3ed269f2f0fb224b$export$2e2bcd8739ae039 extends $4040acfd8584338d$export$
             "reset",
             "maxfilesexceeded",
             "maxfilesreached",
-            "queuecomplete", 
+            "queuecomplete",
         ];
         this.prototype._thumbnailQueue = [];
         this.prototype._processingThumbnail = false;
@@ -816,7 +816,7 @@ class $3ed269f2f0fb224b$export$2e2bcd8739ae039 extends $4040acfd8584338d$export$
                         return this.emit("dragend", e);
                     }
                 }
-            }, 
+            },
         ];
         this.clickableElements.forEach((clickableElement)=>{
             return this.listeners.push({
@@ -1758,7 +1758,7 @@ $3ed269f2f0fb224b$export$2e2bcd8739ae039.discover = function() {
 // incorrectly **
 $3ed269f2f0fb224b$export$2e2bcd8739ae039.blockedBrowsers = [
     // The mac os and windows phone version of opera 12 seems to have a problem with the File drag'n'drop API.
-    /opera.*(Macintosh|Windows Phone).*version\/12/i, 
+    /opera.*(Macintosh|Windows Phone).*version\/12/i,
 ];
 // Checks if the browser is supported
 $3ed269f2f0fb224b$export$2e2bcd8739ae039.isBrowserSupported = function() {
