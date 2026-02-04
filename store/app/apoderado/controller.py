@@ -1,3 +1,3 @@
 class ApoderadoController:
     def index(self):
-        return {'message':'Hello, World!'}
+        return {"message": "Hello, World!"}

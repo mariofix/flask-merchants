@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, jsonify, render_template
+
 from .reader import registra_lectura
 
 pos_bp = Blueprint("pos", __name__)

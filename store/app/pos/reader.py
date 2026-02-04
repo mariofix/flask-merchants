@@ -1,5 +1,5 @@
 from ..database import db
-from ..model import Operador, lecturas
+from ..model import lecturas
 
 
 def registra_lectura(qr_data):

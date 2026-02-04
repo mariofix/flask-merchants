@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
-from .controller import ApoderadoController
 
+from .controller import ApoderadoController
 
 apoderado_bp = Blueprint("apoderado", __name__)
 apoderado_controller = ApoderadoController()
