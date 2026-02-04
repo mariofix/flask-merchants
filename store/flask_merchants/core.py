@@ -1,9 +1,9 @@
 import enum
 from typing import Any
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_admin import Admin
 
+from flask import Flask
+from flask_admin import Admin
+from flask_sqlalchemy import SQLAlchemy
 
 
 class PaymentStatus(enum.Enum):
@@ -30,7 +30,7 @@ def get_payment_model(current_app: Flask, sqla: SQLAlchemy):
     model_config = current_app.config.get("MERCHANTS_PAYMENT_MODEL", None)
 
     try:
-        return get_model(sqla, model_config.rsplit(".", 1).pop()) # type: ignore
+        return get_model(sqla, model_config.rsplit(".", 1).pop())  # type: ignore
     except Exception:
         raise MerchantsError(f"Can't find MERCHANTS_PAYMENT_MODEL={model_config}")
 
@@ -39,7 +39,7 @@ def get_integration_model(current_app: Flask, sqla: SQLAlchemy):
     model_config = current_app.config.get("MERCHANTS_INTEGRATION_MODEL", None)
 
     try:
-        return get_model(sqla, model_config.rsplit(".", 1).pop()) # type: ignore
+        return get_model(sqla, model_config.rsplit(".", 1).pop())  # type: ignore
     except Exception:
         raise MerchantsError(f"Can't find MERCHANTS_INTEGRATION_MODEL={model_config}")
 
@@ -51,7 +51,7 @@ class FlaskMerchantsExtension:
 
     def __init__(self, app: Flask | None = None, db: SQLAlchemy | None = None, admin: Admin | None = None):
         if app:
-            self.init_app(app, db, admin) # type: ignore
+            self.init_app(app, db, admin)  # type: ignore
 
     def init_app(self, app: Flask, db: SQLAlchemy, admin: Admin):
         if hasattr(app, "extensions") and "flask_merchants" not in app.extensions:
@@ -72,11 +72,10 @@ class FlaskMerchantsExtension:
 
     def start_merchants(self):
         # Flask-Admin
-        #self.admin.init_app(self.app)
+        # self.admin.init_app(self.app)
 
         # Register ModelViews
         self.register_modelsviews()
-
 
     def crosscheck(self):
         if "MERCHANTS_PAYMENT_MODEL" not in self.app.config:

@@ -150,7 +150,7 @@ $select-arrow-offset: calc(#{$select-padding-x} + 5px) !default;
 .#{$select-ns}-wrapper {
 	min-height: $input-height;
 	display:flex;
-	
+
 	.input-group-sm > &,
 	&.form-select-sm,
 	&.form-control-sm {
@@ -221,7 +221,7 @@ $select-arrow-offset: calc(#{$select-padding-x} + 5px) !default;
 		--ts-pr-caret: #{$form-select-indicator-padding};
 	}
 
-	&.form-control, 
+	&.form-control,
 	&.form-select {
 		padding:0 !important;
 		height: auto;
