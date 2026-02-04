@@ -11,6 +11,27 @@ def index():
     return render_template("apoderado/dashboard.html")
 
 
+@apoderado_bp.route("/wizard", methods=["GET"])
+@apoderado_bp.route("/wizard/1", methods=["GET"])
+def wizp1():
+    return render_template("apoderado/wizard-paso1.html")
+
+
+@apoderado_bp.route("/wizard/2", methods=["GET"])
+def wizp2():
+    return render_template("apoderado/wizard-paso2.html")
+
+
+@apoderado_bp.route("/wizard/3", methods=["GET"])
+def wizp3():
+    return render_template("apoderado/wizard-paso3.html")
+
+
+@apoderado_bp.route("/wizard/4", methods=["GET"])
+def wizp4():
+    return render_template("apoderado/wizard-paso4.html")
+
+
 @apoderado_bp.route("/abonar", methods=["GET", "POST"])
 def abonar():
     return render_template("apoderado/abono.html")

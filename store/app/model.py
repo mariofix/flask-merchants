@@ -77,6 +77,9 @@ class Payment(db.Model, PaymentMixin):
             raise err
 
 
+## Tienda
+
+
 class Category(db.Model, Timestamp):
     __tablename__ = "store_category"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -188,3 +191,25 @@ class Student(db.Model, Timestamp):
     weekly_limit: Mapped[int] = mapped_column()
 
     user: Mapped["User"] = relationship(back_populates="students")
+
+
+## Lector
+
+
+class Operador(db.Model, Timestamp):
+    __tablename__ = "reader_operator"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(255), nullable=False)
+    codigo_qr: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    en_turno: Mapped[bool] = mapped_column(default=True)
+    linea: Mapped[int]
+
+
+class lecturas(db.Model, Timestamp):
+    __tablename__ = "reader_readings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    codigo_qr: Mapped[str]
+    linea: Mapped[int]
+    camara: Mapped[int]

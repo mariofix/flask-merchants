@@ -4,7 +4,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY: str
 DEBUG = True
 LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
-TRUSTED_HOSTS = ["tardis.local"]
+TRUSTED_HOSTS = ["tardis.local", "localhost"]
 SESSION_COOKIE_NAME = "merchants"
 ADMIN_BASE_URL = "admin"
 SQLALCHEMY_DATABASE_URI = ""
@@ -73,6 +73,11 @@ MERCHANTS_ALLOWED_INTEGRATIONS = [
 ]
 MERCHANTS_PAYMENT_MODEL = "model.store.Payment"
 MERCHANTS_INTEGRATION_MODEL = "model.store.Integration"
+MERCHANTS_INTEGRATIONS = {
+    "test_provider": {
+        "class": "app.extensions.TestProvider",
+    }
+}
 
 STORE_SOCIALS = {
     "youtube": "https://www.youtube.com/channel/channel-name",

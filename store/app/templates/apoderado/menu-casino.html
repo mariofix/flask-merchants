@@ -23,19 +23,178 @@
     </div>
   </div>
 </main>
+<!-- BEGIN MODAL -->
+<div class="modal modal-blur fade rounded bg-surface-backdrop" id="modal-dia" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-3 modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Arma el menú</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="closeModalDia()"></button>
+      </div>
+      <div class="modal-body">
 
+        <div class="mb-3 row">
+          <label class="col-3 col-form-label required">Platos</label>
+          <div class="col">
+            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+              <label class="form-selectgroup-item flex-fill">
+                <input type="radio" name="form-payment" value="khipu" class="form-selectgroup-input" />
+                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                  <div class="me-3">
+                    <span class="form-selectgroup-check"></span>
+                  </div>
+                  <div>
+                    <div class="card-body ps-0">
+                      <div class="row">
+                        <div class="col">
+                          <h3 class="mb-0"><a href="#">Lasaña Boloñesa</a></h3>
+                        </div>
+                        <div class="col-auto fs-3 text-green">$4.500</div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md">
+                          <div class="mt-3 list mb-0 text-secondary d-sm-block d-none">
+                            <div class="list-item">
+                              <!-- Download SVG icon from http://tabler.io/icons/icon/building-community -->
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-seedling">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3" />
+                                <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3" />
+                                <path d="M12 20l0 -10" />
+                              </svg>
+                              Tomate y Pepino
+                            </div>
+                            <div class="list-item">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-cherry">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M4 16.5a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0" />
+                                <path d="M14 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                                <path d="M9 13c.366 -2 1.866 -3.873 4.5 -5.6" />
+                                <path d="M17 15c-1.333 -2.333 -2.333 -5.333 -1 -9" />
+                                <path d="M5 6c3.667 -2.667 7.333 -2.667 11 0c-3.667 2.667 -7.333 2.667 -11 0" />
+                              </svg>
+                              Mousse de Frambuesa
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </label>
+              <label class="form-selectgroup-item flex-fill">
+                <input type="radio" name="form-payment" value="flow" class="form-selectgroup-input" />
+                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                  <div class="me-3">
+                    <span class="form-selectgroup-check"></span>
+                  </div>
+                  <div>
+                    <div class="card-body ps-0">
+                      <div class="row">
+                        <div class="col">
+                          <h3 class="mb-0"><a href="#">Lasaña de Verduras</a></h3>
+                        </div>
+                        <div class="col-auto fs-3 text-green">$4.500</div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md">
+                          <div class="mt-3 list mb-0 text-secondary d-sm-block d-none">
+                            <div class="list-item">
+                              <!-- Download SVG icon from http://tabler.io/icons/icon/building-community -->
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-seedling">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3" />
+                                <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3" />
+                                <path d="M12 20l0 -10" />
+                              </svg>
+                              Tomate y Pepino
+                            </div>
+                            <div class="list-item">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-cherry">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M4 16.5a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0" />
+                                <path d="M14 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                                <path d="M9 13c.366 -2 1.866 -3.873 4.5 -5.6" />
+                                <path d="M17 15c-1.333 -2.333 -2.333 -5.333 -1 -9" />
+                                <path d="M5 6c3.667 -2.667 7.333 -2.667 11 0c-3.667 2.667 -7.333 2.667 -11 0" />
+                              </svg>
+                              Mousse de Frambuesa
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Información adicional</label>
+          <textarea class="form-control"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn me-auto" onclick="closeModalDia()" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" onclick="closeModalDia()" data-bs-dismiss="modal">Agregar al menú</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- END MODAL -->
 {% endblock page_body %}
 
 {% block page_scripts -%}
+
+
 <script src="{{ url_for('static', filename='tabler/libs/fullcalendar/index.global.js', v=app_version)}}"></script>
 <script>
+  function closeModalDia() {
+    const modalEl = document.getElementById('modal-dia');
+
+
+    // jQuery fallback if Tabler uses it
+    if (typeof $ !== 'undefined') {
+      $('#modal-dia').modal('hide');
+    } else {
+      // Manual trigger
+      modalEl.classList.remove('show');
+      modalEl.style.display = 'none';
+    }
+  }
   document.addEventListener("DOMContentLoaded", function () {
     var calendarEl = document.getElementById("calendar-default");
+
     var currentYear = new Date().getFullYear();
     var currentMonth = new Date().getMonth();
+
     var calendar = new FullCalendar.Calendar(calendarEl, {
+      locale: 'es',
       initialView: "dayGridMonth",
       firstDay: 1,
+      buttonText: { today: "Volver a Hoy", },
+      timeZone: "America/Santiago",
+      validRange: {
+        start: '2026-02-01',
+        end: '2026-12-25'
+      },
+      dateClick: function (info) {
+        const modalEl = document.getElementById('modal-dia');
+
+
+        // jQuery fallback if Tabler uses it
+        if (typeof $ !== 'undefined') {
+          $('#modal-dia').modal('show');
+        } else {
+          // Manual trigger
+          modalEl.classList.add('show');
+          modalEl.style.display = 'block';
+        }
+      },
+
       events: [
         {
           title: "Cerrado",
@@ -43,8 +202,13 @@
           end: new Date(currentYear, currentMonth, 9, 23, 59),
           color: "var(--tblr-red)",
           borderColor: "var(--tblr-red-200)",
+
         },
-        {
+
+
+
+
+        {# {
           title: "Lentejas",
           start: new Date(currentYear, currentMonth, 10, 13, 0),
           end: new Date(currentYear, currentMonth, 10, 14, 00),
@@ -78,10 +242,12 @@
           title: "Wraps de Pollo/Carne",
           start: new Date(currentYear, currentMonth, 16, 13, 0),
           end: new Date(currentYear, currentMonth, 16, 14, 0),
-        },
+        }, #}
+
+
       ],
-    });
-    calendar.render();
+  });
+  calendar.render();
   });
 </script>
 {% endblock page_scripts -%}

@@ -5,7 +5,7 @@ from flask_security.datastore import SQLAlchemyUserDatastore
 from flask_admin import helpers as admin_helpers
 
 
-from .extensions import babel, mail
+from .extensions import babel, mail, flask_merchants
 from .extensions.admin import admin
 from .celery import celery_init_app
 from .database import db, migrations
@@ -37,6 +37,9 @@ def create_app():
     migrations.init_app(app, db, directory="app/migrations")
     admin.init_app(app)
 
+    # merchants
+    flask_merchants.init_app(app, db, admin)
+
     # Celery
     celery_init_app(app)
 
@@ -44,7 +47,7 @@ def create_app():
         from flask_debugtoolbar import DebugToolbarExtension
 
         toolbar = DebugToolbarExtension()
-        # toolbar.init_app(app)
+        toolbar.init_app(app)
 
     # Setup Flask-Security
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
