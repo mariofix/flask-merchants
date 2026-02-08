@@ -1,22 +1,24 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, url_for
-from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_admin import helpers as admin_helpers
 from flask_security.core import Security
 from flask_security.datastore import SQLAlchemyUserDatastore
-from flask_admin import helpers as admin_helpers
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-
-from .extensions import babel, mail, flask_merchants
-from .extensions.admin import admin
+from .apoderado.route import apoderado_bp
 from .celery import celery_init_app
 from .database import db, migrations
+from .extensions import babel, flask_merchants, mail
+from .extensions.admin import admin
 from .model import *  # noqa: F403
-from .version import __version__
-from .apoderado.route import apoderado_bp
 from .pos.routes import pos_bp
 from .routes import core_bp
 from .tasks import MyMailUtil
-import os
-from dotenv import load_dotenv
+from .version import __version__
+from flask_wtf import CSRFProtect
+
 
 load_dotenv()
 
@@ -36,6 +38,9 @@ def create_app():
     db.init_app(app)
     migrations.init_app(app, db, directory="app/migrations")
     admin.init_app(app)
+
+    csrf = CSRFProtect()
+    csrf.init_app(app)
 
     # merchants
     flask_merchants.init_app(app, db, admin)

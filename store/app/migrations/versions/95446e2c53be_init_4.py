@@ -1,18 +1,17 @@
-"""settings
+"""init-4
 
-Revision ID: 4c08a28588e8
-Revises: bd84710a1598
-Create Date: 2025-11-30 00:14:38.302142
+Revision ID: 95446e2c53be
+Revises: 2e47724a9982
+Create Date: 2026-02-07 01:21:06.376325
 
 """
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "4c08a28588e8"
-down_revision = "bd84710a1598"
+revision = "95446e2c53be"
+down_revision = "2e47724a9982"
 branch_labels = None
 depends_on = None
 
@@ -29,7 +28,7 @@ def upgrade():
         sa.Column("created", sa.DateTime(), nullable=False),
         sa.Column("updated", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["user.id"], name=op.f("fk_store_settings_user_id_user")),
-        sa.PrimaryKeyConstraint("id", "user_id", name=op.f("pk_store_settings")),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_store_settings")),
         sa.UniqueConstraint("slug", name=op.f("uq_store_settings_slug")),
     )
     # ### end Alembic commands ###

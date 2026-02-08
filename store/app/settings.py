@@ -6,7 +6,9 @@ DEBUG = True
 LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
 TRUSTED_HOSTS = ["tardis.local", "localhost"]
 SESSION_COOKIE_NAME = "merchants"
-ADMIN_BASE_URL = "admin"
+ADMIN_BASE_URL = "data-manager"
+DIRECTORIO_FOTOS_PLATO = f"{BASE_DIR}/app/static/platos"
+
 SQLALCHEMY_DATABASE_URI = ""
 SQLALCHEMY_RECORD_QUERIES = DEBUG
 SQLALCHEMY_ECHO = False

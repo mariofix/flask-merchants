@@ -1,8 +1,9 @@
+from celery import shared_task
 from flask import current_app
-from .extensions import mail
 from flask_mailman import EmailMultiAlternatives
 from flask_security.mail_util import MailUtil
-from celery import shared_task
+
+from .extensions import mail
 
 
 class MyMailUtil(MailUtil):
