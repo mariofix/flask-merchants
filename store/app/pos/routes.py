@@ -27,10 +27,9 @@ def creaOrden(payload):
 def ordenweb():
     payload = request.get_json(force=True)
     ordenes = payload["purchases"]
-    print(f"{ordenes=}")
-    # nueva_orden = creaOrden(ordenes)
-    str_payload = "[{'date': '2026-03-03', 'slug': 'hipocalorico', 'note': ''}, {'date': '2026-03-02', 'slug': 'menu-veg-croquetas', 'note': ''}]"
-    nueva_orden = creaOrden(str_payload)
+
+    nueva_orden = creaOrden(ordenes)
+
     return jsonify(
         {
             "status": "OK",
