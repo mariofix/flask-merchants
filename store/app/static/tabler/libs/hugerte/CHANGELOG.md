@@ -122,4 +122,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adding newline after using `selection.setContent` to insert a block element would throw an unhandled exception. #TINY-10560
 - Floating toolbar buttons in inline editor incorrectly wrapped into multiple rows on window resizing or zooming. #TINY-10570
 - When setting table border width and `table_style_by_css` is true, only the border attribute is set to 0 and border-width styling is no longer used #TINY-10308
-

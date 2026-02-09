@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, abort
+from flask import Blueprint, abort, render_template
 
 core_bp = Blueprint("core", __name__)
 
@@ -29,9 +29,11 @@ def configuracion():
 
 
 def obtiene_menues(dia):
-    from .model import MenuDiario
-    from sqlalchemy import or_, and_
     from datetime import date, datetime
+
+    from sqlalchemy import and_, or_
+
+    from .model import MenuDiario
 
     if dia:
         try:

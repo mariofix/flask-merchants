@@ -1,7 +1,9 @@
 from decimal import Decimal
+
 from flask import Blueprint, jsonify, render_template, request, url_for
-from ..model import Orden
+
 from ..database import db
+from ..model import Orden
 
 # from .reader import registra_lectura
 
