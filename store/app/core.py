@@ -5,6 +5,7 @@ from flask import Flask, url_for
 from flask_admin import helpers as admin_helpers
 from flask_security.core import Security
 from flask_security.datastore import SQLAlchemyUserDatastore
+from flask_wtf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .apoderado.route import apoderado_bp
@@ -17,8 +18,6 @@ from .pos.routes import pos_bp
 from .routes import core_bp
 from .tasks import MyMailUtil
 from .version import __version__
-from flask_wtf import CSRFProtect
-
 
 load_dotenv()
 

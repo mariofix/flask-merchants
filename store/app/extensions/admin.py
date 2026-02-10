@@ -8,10 +8,9 @@ from flask_admin.menu import MenuDivider
 from flask_admin.theme import Bootstrap4Theme
 from slugify import slugify
 
-
 from .. import settings
 from ..database import db
-from ..model import Alumno, Apoderado, FotoPlato, MenuDiario, OpcionMenuDia, Plato, Role, Settings, User, Orden
+from ..model import Alumno, Apoderado, FotoPlato, MenuDiario, OpcionMenuDia, Orden, Plato, Role, Settings, User
 
 admin = Admin(
     name="Merchants Store",

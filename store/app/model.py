@@ -1,17 +1,12 @@
-import os
-import os.path as op
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
 from typing import Any, Optional
 
-from flask import current_app
-from flask_admin import form
 from flask_security.models import fsqla_v3 as fsqla
 from sqlalchemy import JSON
 from sqlalchemy import Date as SaDate
 from sqlalchemy import Enum, ForeignKey, Numeric, String
-from sqlalchemy.event import listens_for
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.models import Timestamp
 from werkzeug.utils import import_string
@@ -23,7 +18,6 @@ from .database import db
 
 
 class Role(db.Model, fsqla.FsRoleMixin):
-
     def __str__(self):
         return f"{self.name}"
 
@@ -419,9 +413,8 @@ class Settings(db.Model, Timestamp):
 #     linea: Mapped[int]
 #     camara: Mapped[int]
 
-from enum import Enum as PyEnum
-from datetime import datetime
 import uuid
+from enum import Enum as PyEnum
 
 
 class EstadoOrden(PyEnum):
