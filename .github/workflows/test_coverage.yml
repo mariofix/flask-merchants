@@ -1,83 +1,59 @@
-name: Tests & Coverage
+name: Tests
 
 on:
   push:
     branches:
-      - main
+      - sandbox
   pull_request:
-    branches:
-      - main
-  workflow_dispatch:
 
 jobs:
-  tests:
+  test:
+    runs-on: ubuntu-latest
+    # Run for all pushes to sandbox, but skip PRs opened by mariofix himself
+    if: github.event_name == 'push' || github.actor != 'mariofix'
+    permissions:
+      contents: read
+
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"] # Remove 3.13 as it's still in alpha
-        poetry-version: ["2.1.3"]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
     steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # Required for better coverage reporting
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          # cache: "poetry" # Enable poetry caching
+          allow-prereleases: true
 
-      - name: Set Up Poetry
-        uses: abatilo/actions-poetry@v4
-        with:
-          poetry-version: ${{ matrix.poetry-version }}
+      - name: Install project with dev dependencies
+        run: pip install -e ".[dev]"
 
-      - name: Install dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry install --all-extras --no-interaction
+      - name: Upgrade to latest stable Flask release
+        run: pip install --upgrade flask
+
+      - name: Install coverage
+        run: pip install coverage
 
       - name: Run tests with coverage
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          poetry run coverage erase
-          poetry run pytest \
-            --cov=flask_merchants \
-            --cov=merchants \
-            --cov=store \
-            --cov-report=xml \
-            --cov-report=term \
-            --cov-branch \
-            -v
+        run: coverage run -m pytest
 
-      - name: Upload to Coveralls
+      - name: Upload partial coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel: true
+          flag-name: py${{ matrix.python-version }}
 
-      - name: Upload to Codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage.xml
-          language: python
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: coverage-${{ matrix.python-version }}
-          path: coverage.xml
-          retention-days: 14
-
-  codacy-analysis-cli:
-    name: Codacy Analysis CLI
+  coveralls-finish:
+    needs: test
     runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Run Codacy Analysis CLI
-        uses: codacy/codacy-analysis-cli-action@master
+      - name: Finalize Coveralls parallel build
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
