@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "flask-merchants"
-dynamic = ["version"]
+version = "2026.2.1"
 description = "Flask/Quart extension for the merchants hosted-checkout payment SDK"
 readme = "README.md"
 license = { text = "MIT" }
