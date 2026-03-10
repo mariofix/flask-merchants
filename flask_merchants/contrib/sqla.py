@@ -31,9 +31,9 @@ Example::
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from flask_merchants.contrib.base import PaymentViewMixin
+from flask_merchants.contrib.base import _STATE_CHOICES, PaymentViewMixin
 
 try:
     from flask_admin.actions import action
@@ -74,7 +74,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
     # Column configuration
     # ------------------------------------------------------------------
     # Extend the base 5 columns from PaymentViewMixin with timestamp columns.
-    column_list = [
+    column_list: ClassVar[list] = [
         "merchants_id",
         "transaction_id",
         "provider",
@@ -84,18 +84,18 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         "created_at",
         "updated_at",
     ]
-    column_labels = {
+    column_labels: ClassVar[dict] = {
         **PaymentViewMixin.column_labels,
         "created_at": "Created",
         "updated_at": "Updated",
     }
-    column_descriptions = {
+    column_descriptions: ClassVar[dict] = {
         **PaymentViewMixin.column_descriptions,
         "created_at": "Timestamp when this payment record was first created.",
         "updated_at": "Timestamp of the most recent update to this payment record.",
     }
-    column_searchable_list = ["merchants_id", "transaction_id", "provider"]
-    column_filters = ["state", "provider", "currency"]
+    column_searchable_list: ClassVar[list] = ["merchants_id", "transaction_id", "provider"]
+    column_filters: ClassVar[list] = ["state", "provider", "currency"]
     column_default_sort = ("created_at", True)
     can_view_details = True
 
@@ -103,7 +103,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
     can_create = True
 
     # Fields available when creating a new payment.
-    form_create_columns = [
+    form_create_columns: ClassVar[list] = [
         "merchants_id",
         "transaction_id",
         "provider",
@@ -113,7 +113,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
     ]
 
     # Fields available when editing an existing payment.
-    form_edit_columns = [
+    form_edit_columns: ClassVar[list] = [
         "provider",
         "amount",
         "currency",
@@ -129,7 +129,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         model,
         session,
         *,
-        ext: "FlaskMerchants | None" = None,
+        ext: FlaskMerchants | None = None,
         can_create: bool | None = None,
         can_edit: bool | None = None,
         can_delete: bool | None = None,
@@ -168,8 +168,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
             from wtforms import ValidationError
 
             raise ValidationError(
-                f"Invalid state {model.state!r}. "
-                f"Choose one of: {', '.join(sorted(valid_states))}."
+                f"Invalid state {model.state!r}. Choose one of: {', '.join(sorted(valid_states))}."
             )
 
     def after_model_change(self, form, model, is_created: bool) -> None:
@@ -201,7 +200,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
                     count += 1
             self.session.commit()
             flash(f"{count} payment(s) marked as refunded.", "success")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.session.rollback()
             flash(f"Failed to refund payments: {exc}", "danger")
 
@@ -221,7 +220,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
                     count += 1
             self.session.commit()
             flash(f"{count} payment(s) cancelled.", "success")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.session.rollback()
             flash(f"Failed to cancel payments: {exc}", "danger")
 
@@ -244,10 +243,10 @@ class PaymentModelView(PaymentViewMixin, ModelView):
                     status = self._ext.client.payments.get(record.transaction_id)
                     record.state = status.state.value
                     count += 1
-                except Exception:  # noqa: BLE001
+                except Exception:
                     pass
             self.session.commit()
             flash(f"{count} payment(s) synced from provider.", "success")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.session.rollback()
             flash(f"Failed to sync payments: {exc}", "danger")

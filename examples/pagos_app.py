@@ -29,11 +29,11 @@ from flask_merchants import FlaskMerchants
 from flask_merchants.contrib.sqla import PaymentModelView
 from flask_merchants.models import PaymentMixin
 
-
 # ---------------------------------------------------------------------------
 # 1. Define your own declarative base and model.
 #    Mix in PaymentMixin to get all the payment fields and helpers.
 # ---------------------------------------------------------------------------
+
 
 class Base(DeclarativeBase):
     pass
@@ -65,7 +65,7 @@ app.config["SECRET_KEY"] = "change-me-in-production"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///pagos.db"
 app.config["MERCHANTS_URL_PREFIX"] = "/merchants"
 
-# DummyProvider is used by default – no credentials needed for local dev.
+# DummyProvider is used by default - no credentials needed for local dev.
 ext = FlaskMerchants(app, db=db, models=[Pagos])
 db.init_app(app)
 
@@ -75,9 +75,7 @@ db.init_app(app)
 # ---------------------------------------------------------------------------
 
 admin = Admin(app, name="Pagos Admin")
-admin.add_view(
-    PaymentModelView(Pagos, db.session, ext=ext, name="Pagos", endpoint="pagos")
-)
+admin.add_view(PaymentModelView(Pagos, db.session, ext=ext, name="Pagos", endpoint="pagos"))
 
 with app.app_context():
     db.create_all()

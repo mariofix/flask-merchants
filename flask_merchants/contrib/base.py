@@ -8,6 +8,8 @@ payment records.
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from markupsafe import Markup
 
 #: Ordered list of (value, label) pairs for the payment lifecycle state field.
@@ -70,10 +72,17 @@ class PaymentViewMixin:
     """
 
     #: Core columns displayed in the list view.
-    column_list = ["merchants_id", "transaction_id", "provider", "amount", "currency", "state"]
+    column_list: ClassVar[list] = [
+        "merchants_id",
+        "transaction_id",
+        "provider",
+        "amount",
+        "currency",
+        "state",
+    ]
 
     #: Human-readable column header labels.
-    column_labels = {
+    column_labels: ClassVar[dict] = {
         "merchants_id": "Merchants ID",
         "transaction_id": "Transaction ID",
         "provider": "Provider",
@@ -83,7 +92,7 @@ class PaymentViewMixin:
     }
 
     #: Tooltip help text shown next to each column header.
-    column_descriptions = {
+    column_descriptions: ClassVar[dict] = {
         "merchants_id": "Internal payment identifier (UUID4).",
         "transaction_id": "Identifier assigned by the payment provider.",
         "provider": "The payment gateway that processed this transaction.",
@@ -93,7 +102,7 @@ class PaymentViewMixin:
     }
 
     #: Custom cell renderers: state as a Bootstrap badge, merchants_id in ``<small>``.
-    column_formatters = {
+    column_formatters: ClassVar[dict] = {
         "state": _fmt_state,
         "merchants_id": _fmt_merchants_id,
     }
@@ -102,4 +111,4 @@ class PaymentViewMixin:
     state_choices = _STATE_CHOICES
 
     #: WTForms field choices for the ``state`` form field.
-    form_choices = {"state": _STATE_CHOICES}
+    form_choices: ClassVar[dict] = {"state": _STATE_CHOICES}

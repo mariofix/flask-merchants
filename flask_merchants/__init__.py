@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import merchants
 from merchants.providers.dummy import DummyProvider
 
-from flask_merchants.views import create_blueprint
 from flask_merchants.version import __version__
+from flask_merchants.views import create_blueprint
 
-__all__ = ["FlaskMerchants", "merchants_audit"]
+__all__ = ["FlaskMerchants", "__version__", "merchants_audit"]
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +151,17 @@ class FlaskMerchants:
         ``RuntimeError``.
     """
 
-    def __init__(self, app=None, *, provider=None, providers=None, db=None, model=None, models=None, admin=None) -> None:
+    def __init__(
+        self,
+        app=None,
+        *,
+        provider=None,
+        providers=None,
+        db=None,
+        model=None,
+        models=None,
+        admin=None,
+    ) -> None:
         self._provider = provider
         self._providers: list = list(providers) if providers is not None else []
         self._db = db
@@ -349,7 +360,9 @@ class FlaskMerchants:
             client = ext.get_client("stripe")
             session = client.payments.create_checkout(...)
         """
-        logger.debug("__init__.py: FlaskMerchants.get_client called with provider_key=%r", provider_key)
+        logger.debug(
+            "__init__.py: FlaskMerchants.get_client called with provider_key=%r", provider_key
+        )
         if provider_key is None:
             return self.client
         if provider_key not in self._clients:
@@ -357,9 +370,8 @@ class FlaskMerchants:
                 self._clients[provider_key] = self._make_client(provider_key)
             except KeyError:
                 raise KeyError(
-                    f"Unknown provider: {provider_key!r}. "
-                    f"Available: {merchants.list_providers()}"
-                )
+                    f"Unknown provider: {provider_key!r}. Available: {merchants.list_providers()}"
+                ) from None
         return self._clients[provider_key]
 
     def get_webhook_url(self, provider: str) -> str:
@@ -376,7 +388,9 @@ class FlaskMerchants:
             url = ext.get_webhook_url("khipu")
             # -> "https://example.com/merchants/webhook/khipu"
         """
-        logger.debug("__init__.py: FlaskMerchants.get_webhook_url called with provider=%r", provider)
+        logger.debug(
+            "__init__.py: FlaskMerchants.get_webhook_url called with provider=%r", provider
+        )
         if not self._webhook_base_url:
             raise RuntimeError(
                 "MERCHANTS_WEBHOOK_BASE_URL is not configured. "
@@ -416,10 +430,10 @@ class FlaskMerchants:
         When enabled, every incoming webhook triggers an email to the
         addresses returned by *admin_emails_fn* containing:
 
-        * **provider** – the provider slug (e.g. ``"khipu"``)
-        * **transaction** – the ``payment_id`` from the parsed event
-        * **headers** – the full HTTP request headers (JSON)
-        * **body** – the full HTTP request body (JSON)
+        * **provider** - the provider slug (e.g. ``"khipu"``)
+        * **transaction** - the ``payment_id`` from the parsed event
+        * **headers** - the full HTTP request headers (JSON)
+        * **body** - the full HTTP request body (JSON)
 
         Args:
             admin_emails_fn: A callable that returns a list of email
@@ -464,7 +478,7 @@ class FlaskMerchants:
 
         try:
             admin_emails = admin_emails_fn()
-        except Exception:  # noqa: BLE001
+        except Exception:
             merchants_audit.exception("webhook_notification: failed to resolve admin emails")
             return
         if not admin_emails:
@@ -510,10 +524,8 @@ class FlaskMerchants:
                 send_fn(notification_info)
             else:
                 self._send_webhook_notification_default(notification_info)
-        except Exception:  # noqa: BLE001
-            merchants_audit.exception(
-                "webhook_notification: failed to send notification email"
-            )
+        except Exception:
+            merchants_audit.exception("webhook_notification: failed to send notification email")
 
     @staticmethod
     def _send_webhook_notification_default(info: dict) -> None:
@@ -521,9 +533,7 @@ class FlaskMerchants:
         try:
             from flask_mailman import EmailMessage
         except ImportError:
-            logger.warning(
-                "flask_mailman not installed; cannot send webhook notification email"
-            )
+            logger.warning("flask_mailman not installed; cannot send webhook notification email")
             return
 
         msg = EmailMessage(
@@ -546,12 +556,13 @@ class FlaskMerchants:
         """
         logger.debug(
             "__init__.py: FlaskMerchants._dispatch_webhook_event called with event_type=%r payment_id=%r",
-            event.event_type, event.payment_id,
+            event.event_type,
+            event.payment_id,
         )
         for handler in self._webhook_handlers:
             try:
                 handler(event)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 merchants_audit.exception(
                     "webhook_handler_error: handler=%r event_type=%r payment_id=%r",
                     handler,
@@ -664,7 +675,8 @@ class FlaskMerchants:
 
         logger.debug(
             "__init__.py: FlaskMerchants.save_session called with session_id=%s provider=%s",
-            session.session_id, session.provider,
+            session.session_id,
+            session.provider,
         )
         # session.raw holds the provider's raw response; guard against non-dict types
         response_raw = session.raw if isinstance(session.raw, dict) else {}
@@ -712,18 +724,14 @@ class FlaskMerchants:
         if self._db is not None:
             for model_cls in self._get_model_classes():
                 record = (
-                    self._db.session.query(model_cls)
-                    .filter_by(merchants_id=payment_id)
-                    .first()
+                    self._db.session.query(model_cls).filter_by(merchants_id=payment_id).first()
                 )
                 if record is not None:
                     return record.to_dict()
             # Fallback: search by transaction_id
             for model_cls in self._get_model_classes():
                 record = (
-                    self._db.session.query(model_cls)
-                    .filter_by(transaction_id=payment_id)
-                    .first()
+                    self._db.session.query(model_cls).filter_by(transaction_id=payment_id).first()
                 )
                 if record is not None:
                     return record.to_dict()
@@ -742,14 +750,16 @@ class FlaskMerchants:
         When multiple models are registered, all of them are searched in
         registration order; the first match is updated.
         """
-        logger.debug("__init__.py: FlaskMerchants.update_state called with payment_id=%s state=%r", payment_id, state)
+        logger.debug(
+            "__init__.py: FlaskMerchants.update_state called with payment_id=%s state=%r",
+            payment_id,
+            state,
+        )
         if self._db is not None:
             record = None
             for model_cls in self._get_model_classes():
                 record = (
-                    self._db.session.query(model_cls)
-                    .filter_by(merchants_id=payment_id)
-                    .first()
+                    self._db.session.query(model_cls).filter_by(merchants_id=payment_id).first()
                 )
                 if record is not None:
                     break
@@ -809,7 +819,7 @@ class FlaskMerchants:
             return None
         try:
             status = self.client.payments.get(payment_id)
-        except Exception:  # noqa: BLE001
+        except Exception:
             return None
         self.update_state(payment_id, status.state.value)
         stored["state"] = status.state.value
@@ -830,4 +840,3 @@ class FlaskMerchants:
                 result.extend(r.to_dict() for r in self._db.session.query(cls).all())
             return result
         return list(self._store.values())
-

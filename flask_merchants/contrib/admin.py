@@ -36,11 +36,11 @@ Example - automatic registration (pass ``admin=`` to FlaskMerchants)::
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from flask import flash
 
-from flask_merchants.contrib.base import PaymentViewMixin, _STATE_CHOICES
+from flask_merchants.contrib.base import _STATE_CHOICES, PaymentViewMixin
 
 try:
     from flask_admin.actions import action
@@ -122,13 +122,20 @@ class PaymentView(PaymentViewMixin, BaseModelView):
     edit_modal = False
 
     # Column configuration (core columns + details/search/sort for in-memory backend)
-    column_details_list = ["merchants_id", "transaction_id", "provider", "amount", "currency", "state"]
-    column_searchable_list = ["merchants_id", "transaction_id", "provider", "state"]
-    column_sortable_list = ["provider", "amount", "currency", "state"]
+    column_details_list: ClassVar[list] = [
+        "merchants_id",
+        "transaction_id",
+        "provider",
+        "amount",
+        "currency",
+        "state",
+    ]
+    column_searchable_list: ClassVar[list] = ["merchants_id", "transaction_id", "provider", "state"]
+    column_sortable_list: ClassVar[list] = ["provider", "amount", "currency", "state"]
 
     def __init__(
         self,
-        ext: "FlaskMerchants",
+        ext: FlaskMerchants,
         name: str = "Payments",
         endpoint: str = "payments",
         category: str | None = None,
@@ -159,7 +166,8 @@ class PaymentView(PaymentViewMixin, BaseModelView):
         }
 
     def scaffold_form(self):
-        from wtforms import Form as WTForm, SelectField
+        from wtforms import Form as WTForm
+        from wtforms import SelectField
 
         choices = _STATE_CHOICES
 
@@ -304,7 +312,7 @@ class ProvidersView(BaseModelView):
     can_delete = False
 
     # Column configuration
-    column_list = [
+    column_list: ClassVar[list] = [
         "key",
         "base_url",
         "auth_type",
@@ -313,9 +321,9 @@ class ProvidersView(BaseModelView):
         "transport",
         "payment_count",
     ]
-    column_searchable_list = ["key", "base_url", "auth_type"]
-    column_sortable_list = ["key", "payment_count"]
-    column_labels = {
+    column_searchable_list: ClassVar[list] = ["key", "base_url", "auth_type"]
+    column_sortable_list: ClassVar[list] = ["key", "payment_count"]
+    column_labels: ClassVar[dict] = {
         "key": "Provider Key",
         "base_url": "Base URL",
         "auth_type": "Auth Type",
@@ -324,7 +332,7 @@ class ProvidersView(BaseModelView):
         "transport": "Transport",
         "payment_count": "Payments",
     }
-    column_descriptions = {
+    column_descriptions: ClassVar[dict] = {
         "key": "Unique identifier used to reference this provider in the application.",
         "base_url": "Base API endpoint URL for this provider.",
         "auth_type": "Authentication strategy used for API requests (e.g. ApiKeyAuth, TokenAuth).",
@@ -339,7 +347,7 @@ class ProvidersView(BaseModelView):
 
     def __init__(
         self,
-        ext: "FlaskMerchants",
+        ext: FlaskMerchants,
         name: str = "Providers",
         endpoint: str = "providers",
         category: str | None = None,
@@ -406,11 +414,15 @@ class ProvidersView(BaseModelView):
         for key in provider_keys:
             try:
                 client = self._ext.get_client(key)
-                base_url = getattr(client._provider, "_base_url", "") or getattr(client, "_base_url", "N/A") or "N/A"
+                base_url = (
+                    getattr(client._provider, "_base_url", "")
+                    or getattr(client, "_base_url", "N/A")
+                    or "N/A"
+                )
                 auth_src = client._auth or getattr(client._provider, "_auth", None)
                 auth_info = _get_auth_info(auth_src)
                 transport = type(client._transport).__name__
-            except Exception:  # noqa: BLE001
+            except Exception:
                 base_url = "N/A"
                 auth_info = _get_auth_info(None)
                 transport = "N/A"
@@ -475,7 +487,7 @@ class ProvidersView(BaseModelView):
 
 
 def register_admin_views(
-    admin, ext: "FlaskMerchants", *, payment_name: str = "Payments", provider_name: str = "Providers"
+    admin, ext: FlaskMerchants, *, payment_name: str = "Payments", provider_name: str = "Providers"
 ) -> None:
     """Register the standard Merchants admin views into *admin*.
 
