@@ -11,6 +11,8 @@ when the application is a :class:`quart.Quart` instance.
 
 from __future__ import annotations
 
+import hashlib
+import hmac as _hmac
 import json
 from typing import TYPE_CHECKING
 
@@ -20,7 +22,7 @@ if TYPE_CHECKING:
     from flask_merchants import FlaskMerchants
 
 
-def create_async_blueprint(ext: "FlaskMerchants"):
+def create_async_blueprint(ext: FlaskMerchants):
     """Return a Quart Blueprint pre-configured with the extension instance."""
     try:
         from quart import Blueprint, jsonify, redirect, request, url_for
@@ -170,11 +172,21 @@ def create_async_blueprint(ext: "FlaskMerchants"):
     async def webhook():
         """Receive and process incoming provider webhook events."""
         payload: bytes = await request.get_data()
+        from quart import current_app as _current_app
+
+        secret = _current_app.config.get("MERCHANTS_WEBHOOK_SECRET")
+        if secret:
+            sig = request.headers.get("X-Merchants-Signature", "")
+            if not sig:
+                return jsonify({"error": "missing signature"}), 400
+            expected = "sha256=" + _hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
+            if not _hmac.compare_digest(sig, expected):
+                return jsonify({"error": "invalid signature"}), 400
         headers: dict[str, str] = dict(request.headers)
 
         try:
             event = ext.client._provider.parse_webhook(payload, headers)
-        except Exception:  # noqa: BLE001
+        except Exception:
             return jsonify({"error": "malformed payload"}), 400
 
         ext.update_state(event.payment_id, event.state.value)
@@ -214,7 +226,7 @@ def create_async_blueprint(ext: "FlaskMerchants"):
 
         try:
             event = client._provider.parse_webhook(payload, headers)
-        except Exception:  # noqa: BLE001
+        except Exception:
             return jsonify({"error": "malformed payload"}), 400
 
         if event.payment_id:

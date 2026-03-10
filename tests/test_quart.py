@@ -43,7 +43,7 @@ async def test_quart_checkout_json(quart_app):
         )
         assert resp.status_code == 200
         data = await resp.get_json()
-        assert "session_id" in data
+        assert "transaction_id" in data
         assert "redirect_url" in data
 
 
@@ -56,7 +56,7 @@ async def test_quart_checkout_stores_session(quart_app, quart_ext):
             json={"amount": "5.00", "currency": "EUR"},
         )
         data = await resp.get_json()
-        session_id = data["session_id"]
+        session_id = data["transaction_id"]
 
     stored = quart_ext.get_session(session_id)
     assert stored is not None
@@ -113,7 +113,7 @@ async def test_quart_payment_status(quart_app, quart_ext):
             json={"amount": "1.00", "currency": "USD"},
         )
         data = await resp.get_json()
-        session_id = data["session_id"]
+        session_id = data["transaction_id"]
 
         status_resp = await client.get(f"/merchants/status/{session_id}")
         assert status_resp.status_code == 200

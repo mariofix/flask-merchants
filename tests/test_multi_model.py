@@ -10,6 +10,7 @@ Verifies that one ext instance can manage two models (Pagos + Paiements):
 import pytest
 from flask import Flask
 from flask_admin import Admin
+from flask_babel import Babel
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -18,10 +19,10 @@ from flask_merchants import FlaskMerchants
 from flask_merchants.contrib.sqla import PaymentModelView
 from flask_merchants.models import PaymentMixin
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def multi_app():
@@ -45,6 +46,7 @@ def multi_app():
     application.config["SECRET_KEY"] = "test-secret"
     application.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 
+    Babel(application)
     db.init_app(application)
 
     ext = FlaskMerchants(application, db=db, models=[Pagos, Paiements])
@@ -97,6 +99,7 @@ def Paiements(multi_app):
 # _get_model_classes / _payment_model
 # ---------------------------------------------------------------------------
 
+
 def test_get_model_classes_returns_both(multi_ext, Pagos, Paiements):
     """_get_model_classes returns all registered models."""
     classes = multi_ext._get_model_classes()
@@ -114,6 +117,7 @@ def test_payment_model_is_first(multi_ext, Pagos):
 # models= vs model= construction
 # ---------------------------------------------------------------------------
 
+
 def test_models_list_construction():
     """FlaskMerchants(models=[...]) populates _models correctly."""
     app = Flask(__name__)
@@ -121,6 +125,7 @@ def test_models_list_construction():
 
     class Base(DeclarativeBase):
         pass
+
     db = SQLAlchemy(model_class=Base)
 
     class A(PaymentMixin, db.Model):
@@ -137,8 +142,10 @@ def test_models_list_construction():
 
 def test_single_model_still_works():
     """model= (single) backward compat: _get_model_classes returns [model]."""
+
     class Base(DeclarativeBase):
         pass
+
     db = SQLAlchemy(model_class=Base)
 
     class C(PaymentMixin, db.Model):
@@ -154,6 +161,7 @@ def test_single_model_still_works():
 # save_session with explicit model_class
 # ---------------------------------------------------------------------------
 
+
 def test_save_session_to_pagos(multi_client, multi_app, multi_db, multi_ext, Pagos, Paiements):
     """save_session with model_class=Pagos saves only to Pagos table."""
     with multi_app.app_context():
@@ -162,10 +170,12 @@ def test_save_session_to_pagos(multi_client, multi_app, multi_db, multi_ext, Pag
             "/merchants/checkout",
             json={"amount": "10.00", "currency": "EUR"},
         )
-        session_id = resp.get_json()["session_id"]
+        session_id = resp.get_json()["transaction_id"]
 
-        pagos_record = multi_db.session.query(Pagos).filter_by(session_id=session_id).first()
-        paiements_record = multi_db.session.query(Paiements).filter_by(session_id=session_id).first()
+        pagos_record = multi_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
+        paiements_record = (
+            multi_db.session.query(Paiements).filter_by(transaction_id=session_id).first()
+        )
 
         assert pagos_record is not None, "Expected record in Pagos table"
         assert paiements_record is None, "Should NOT be in Paiements table"
@@ -182,8 +192,12 @@ def test_save_session_explicit_paiements(multi_app, multi_db, multi_ext, Pagos, 
         )
         multi_ext.save_session(session, model_class=Paiements)
 
-        pagos_record = multi_db.session.query(Pagos).filter_by(session_id=session.session_id).first()
-        paiements_record = multi_db.session.query(Paiements).filter_by(session_id=session.session_id).first()
+        pagos_record = (
+            multi_db.session.query(Pagos).filter_by(transaction_id=session.session_id).first()
+        )
+        paiements_record = (
+            multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
+        )
 
         assert paiements_record is not None, "Expected record in Paiements table"
         assert pagos_record is None, "Should NOT be in Pagos table"
@@ -193,51 +207,61 @@ def test_save_session_explicit_paiements(multi_app, multi_db, multi_ext, Pagos, 
 # get_session searches all models
 # ---------------------------------------------------------------------------
 
+
 def test_get_session_finds_pagos_record(multi_app, multi_db, multi_ext, Pagos):
     """get_session returns a record stored in the Pagos table."""
     with multi_app.app_context():
         session = multi_ext.client.payments.create_checkout(
-            amount="5.00", currency="USD",
-            success_url="http://localhost/s", cancel_url="http://localhost/c",
+            amount="5.00",
+            currency="USD",
+            success_url="http://localhost/s",
+            cancel_url="http://localhost/c",
         )
         multi_ext.save_session(session, model_class=Pagos)
 
         stored = multi_ext.get_session(session.session_id)
         assert stored is not None
-        assert stored["session_id"] == session.session_id
+        assert stored["transaction_id"] == session.session_id
 
 
 def test_get_session_finds_paiements_record(multi_app, multi_db, multi_ext, Paiements):
     """get_session returns a record stored in the Paiements table."""
     with multi_app.app_context():
         session = multi_ext.client.payments.create_checkout(
-            amount="15.00", currency="EUR",
-            success_url="http://localhost/s", cancel_url="http://localhost/c",
+            amount="15.00",
+            currency="EUR",
+            success_url="http://localhost/s",
+            cancel_url="http://localhost/c",
         )
         multi_ext.save_session(session, model_class=Paiements)
 
         stored = multi_ext.get_session(session.session_id)
         assert stored is not None
-        assert stored["session_id"] == session.session_id
+        assert stored["transaction_id"] == session.session_id
 
 
 # ---------------------------------------------------------------------------
 # update_state searches all models
 # ---------------------------------------------------------------------------
 
+
 def test_update_state_on_paiements(multi_app, multi_db, multi_ext, Paiements):
     """update_state finds and updates a record in the Paiements table."""
     with multi_app.app_context():
         session = multi_ext.client.payments.create_checkout(
-            amount="30.00", currency="EUR",
-            success_url="http://localhost/s", cancel_url="http://localhost/c",
+            amount="30.00",
+            currency="EUR",
+            success_url="http://localhost/s",
+            cancel_url="http://localhost/c",
         )
         multi_ext.save_session(session, model_class=Paiements)
 
         result = multi_ext.update_state(session.session_id, "succeeded")
         assert result is True
 
-        record = multi_db.session.query(Paiements).filter_by(session_id=session.session_id).first()
+        record = (
+            multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
+        )
         assert record.state == "succeeded"
 
 
@@ -245,22 +269,27 @@ def test_update_state_on_paiements(multi_app, multi_db, multi_ext, Paiements):
 # all_sessions
 # ---------------------------------------------------------------------------
 
+
 def test_all_sessions_combines_both_models(multi_app, multi_ext, Pagos, Paiements):
     """all_sessions() without filter returns records from all models."""
     with multi_app.app_context():
         s1 = multi_ext.client.payments.create_checkout(
-            amount="1.00", currency="USD",
-            success_url="http://localhost/s", cancel_url="http://localhost/c",
+            amount="1.00",
+            currency="USD",
+            success_url="http://localhost/s",
+            cancel_url="http://localhost/c",
         )
         s2 = multi_ext.client.payments.create_checkout(
-            amount="2.00", currency="EUR",
-            success_url="http://localhost/s", cancel_url="http://localhost/c",
+            amount="2.00",
+            currency="EUR",
+            success_url="http://localhost/s",
+            cancel_url="http://localhost/c",
         )
         multi_ext.save_session(s1, model_class=Pagos)
         multi_ext.save_session(s2, model_class=Paiements)
 
         all_sess = multi_ext.all_sessions()
-        ids = {s["session_id"] for s in all_sess}
+        ids = {s["transaction_id"] for s in all_sess}
         assert s1.session_id in ids
         assert s2.session_id in ids
 
@@ -269,12 +298,16 @@ def test_all_sessions_filtered_by_model(multi_app, multi_ext, Pagos, Paiements):
     """all_sessions(model_class=X) returns only records from that model."""
     with multi_app.app_context():
         s1 = multi_ext.client.payments.create_checkout(
-            amount="1.00", currency="USD",
-            success_url="http://localhost/s", cancel_url="http://localhost/c",
+            amount="1.00",
+            currency="USD",
+            success_url="http://localhost/s",
+            cancel_url="http://localhost/c",
         )
         s2 = multi_ext.client.payments.create_checkout(
-            amount="2.00", currency="EUR",
-            success_url="http://localhost/s", cancel_url="http://localhost/c",
+            amount="2.00",
+            currency="EUR",
+            success_url="http://localhost/s",
+            cancel_url="http://localhost/c",
         )
         multi_ext.save_session(s1, model_class=Pagos)
         multi_ext.save_session(s2, model_class=Paiements)
@@ -282,8 +315,8 @@ def test_all_sessions_filtered_by_model(multi_app, multi_ext, Pagos, Paiements):
         pagos_sess = multi_ext.all_sessions(model_class=Pagos)
         paiements_sess = multi_ext.all_sessions(model_class=Paiements)
 
-        pagos_ids = {s["session_id"] for s in pagos_sess}
-        paiements_ids = {s["session_id"] for s in paiements_sess}
+        pagos_ids = {s["transaction_id"] for s in pagos_sess}
+        paiements_ids = {s["transaction_id"] for s in paiements_sess}
 
         assert s1.session_id in pagos_ids
         assert s1.session_id not in paiements_ids
@@ -294,6 +327,7 @@ def test_all_sessions_filtered_by_model(multi_app, multi_ext, Pagos, Paiements):
 # ---------------------------------------------------------------------------
 # Flask-Admin with multi-model ext
 # ---------------------------------------------------------------------------
+
 
 def test_admin_pagos_view_renders(multi_client, multi_app):
     with multi_app.app_context():
@@ -311,12 +345,16 @@ def test_admin_refund_paiements(multi_client, multi_app, multi_db, multi_ext, Pa
     """Admin refund action works on Paiements rows via the shared ext."""
     with multi_app.app_context():
         session = multi_ext.client.payments.create_checkout(
-            amount="5.00", currency="EUR",
-            success_url="http://localhost/s", cancel_url="http://localhost/c",
+            amount="5.00",
+            currency="EUR",
+            success_url="http://localhost/s",
+            cancel_url="http://localhost/c",
         )
         multi_ext.save_session(session, model_class=Paiements)
 
-        record = multi_db.session.query(Paiements).filter_by(session_id=session.session_id).first()
+        record = (
+            multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
+        )
         pk = str(record.id)
 
         resp = multi_client.post(
@@ -326,5 +364,7 @@ def test_admin_refund_paiements(multi_client, multi_app, multi_db, multi_ext, Pa
         assert resp.status_code in (200, 302)
 
         multi_db.session.expire_all()
-        refreshed = multi_db.session.query(Paiements).filter_by(session_id=session.session_id).first()
+        refreshed = (
+            multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
+        )
         assert refreshed.state == "refunded"

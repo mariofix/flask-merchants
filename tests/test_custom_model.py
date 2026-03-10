@@ -4,10 +4,12 @@ Verifies that a developer can bring their own SQLAlchemy model (e.g. Pagos)
 and have FlaskMerchants store/retrieve payments through it.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 from flask import Flask
 from flask_admin import Admin
+from flask_babel import Babel
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -16,10 +18,10 @@ from flask_merchants import FlaskMerchants
 from flask_merchants.contrib.sqla import PaymentModelView
 from flask_merchants.models import PaymentMixin
 
-
 # ---------------------------------------------------------------------------
 # Fixtures: custom Pagos model backed by in-memory SQLite
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def pagos_app():
@@ -39,6 +41,7 @@ def pagos_app():
     application.config["SECRET_KEY"] = "test-secret"
     application.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 
+    Babel(application)
     db.init_app(application)
 
     ext = FlaskMerchants(application, db=db, model=Pagos)
@@ -82,25 +85,36 @@ def Pagos(pagos_app):
 # PaymentMixin
 # ---------------------------------------------------------------------------
 
+
 def test_payment_mixin_fields(Pagos):
     """Pagos model inherits all required payment columns from PaymentMixin."""
     cols = {c.key for c in Pagos.__table__.columns}
-    for field in ("session_id", "redirect_url", "provider", "amount", "currency", "state", "metadata_json", "request_payload", "response_payload"):
+    for field in (
+        "merchants_id",
+        "transaction_id",
+        "provider",
+        "amount",
+        "currency",
+        "state",
+        "request_payload",
+        "response_payload",
+    ):
         assert field in cols, f"Missing column: {field}"
 
 
 def test_payment_mixin_to_dict(Pagos):
     """to_dict returns the expected keys including payload fields."""
     p = Pagos(
-        session_id="s1",
-        redirect_url="http://example.com",
+        merchants_id="s1",
+        transaction_id="t1",
         provider="dummy",
         amount="10.00",
         currency="USD",
         state="pending",
     )
     d = p.to_dict()
-    assert d["session_id"] == "s1"
+    assert d["merchants_id"] == "s1"
+    assert d["transaction_id"] == "t1"
     assert d["state"] == "pending"
     assert d["currency"] == "USD"
     assert "request_payload" in d
@@ -109,7 +123,7 @@ def test_payment_mixin_to_dict(Pagos):
 
 def test_payment_mixin_repr(Pagos):
     """__repr__ uses the subclass name, not 'Payment'."""
-    p = Pagos(session_id="s2", state="succeeded")
+    p = Pagos(merchants_id="s2", state="succeeded")
     assert "Pagos" in repr(p)
     assert "s2" in repr(p)
 
@@ -117,6 +131,7 @@ def test_payment_mixin_repr(Pagos):
 # ---------------------------------------------------------------------------
 # Store helpers with custom model
 # ---------------------------------------------------------------------------
+
 
 def test_save_session_uses_custom_model(pagos_client, pagos_app, pagos_db, Pagos):
     """Checkout stores a row in the custom Pagos table."""
@@ -126,9 +141,9 @@ def test_save_session_uses_custom_model(pagos_client, pagos_app, pagos_db, Pagos
             json={"amount": "25.00", "currency": "EUR"},
         )
         assert resp.status_code == 200
-        session_id = resp.get_json()["session_id"]
+        session_id = resp.get_json()["transaction_id"]
 
-        record = pagos_db.session.query(Pagos).filter_by(session_id=session_id).first()
+        record = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         assert record is not None
         assert record.state == "pending"
         assert record.amount == Decimal("25.00")
@@ -142,11 +157,11 @@ def test_get_session_from_custom_model(pagos_client, pagos_app, pagos_ext):
             "/merchants/checkout",
             json={"amount": "5.00", "currency": "USD"},
         )
-        session_id = resp.get_json()["session_id"]
+        session_id = resp.get_json()["transaction_id"]
 
         stored = pagos_ext.get_session(session_id)
         assert stored is not None
-        assert stored["session_id"] == session_id
+        assert stored["transaction_id"] == session_id
         assert stored["amount"] == "5.00"
 
 
@@ -157,11 +172,11 @@ def test_update_state_on_custom_model(pagos_client, pagos_app, pagos_db, pagos_e
             "/merchants/checkout",
             json={"amount": "1.00", "currency": "USD"},
         )
-        session_id = resp.get_json()["session_id"]
+        session_id = resp.get_json()["transaction_id"]
 
         pagos_ext.update_state(session_id, "succeeded")
 
-        record = pagos_db.session.query(Pagos).filter_by(session_id=session_id).first()
+        record = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         assert record.state == "succeeded"
 
 
@@ -171,12 +186,13 @@ def test_all_sessions_from_custom_model(pagos_client, pagos_app, pagos_ext):
         pagos_client.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
         sessions = pagos_ext.all_sessions()
         assert len(sessions) >= 1
-        assert all("session_id" in s for s in sessions)
+        assert all("transaction_id" in s for s in sessions)
 
 
 # ---------------------------------------------------------------------------
 # Flask-Admin with custom model
 # ---------------------------------------------------------------------------
+
 
 def test_admin_pagos_list(pagos_client, pagos_app):
     """Admin list page renders for the custom model."""
@@ -189,9 +205,9 @@ def test_admin_pagos_refund_action(pagos_client, pagos_app, pagos_db, Pagos):
     """Admin refund action marks a Pagos row as refunded."""
     with pagos_app.app_context():
         resp = pagos_client.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
-        session_id = resp.get_json()["session_id"]
+        session_id = resp.get_json()["transaction_id"]
 
-        record = pagos_db.session.query(Pagos).filter_by(session_id=session_id).first()
+        record = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         pk = str(record.id)
 
         action_resp = pagos_client.post(
@@ -201,7 +217,7 @@ def test_admin_pagos_refund_action(pagos_client, pagos_app, pagos_db, Pagos):
         assert action_resp.status_code in (200, 302)
 
         pagos_db.session.expire_all()
-        refreshed = pagos_db.session.query(Pagos).filter_by(session_id=session_id).first()
+        refreshed = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         assert refreshed.state == "refunded"
 
 
@@ -209,9 +225,9 @@ def test_admin_pagos_sync_action(pagos_client, pagos_app, pagos_db, Pagos):
     """Admin sync action fetches live state from DummyProvider."""
     with pagos_app.app_context():
         resp = pagos_client.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
-        session_id = resp.get_json()["session_id"]
+        session_id = resp.get_json()["transaction_id"]
 
-        record = pagos_db.session.query(Pagos).filter_by(session_id=session_id).first()
+        record = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         assert record.state == "pending"
         pk = str(record.id)
 
@@ -222,6 +238,6 @@ def test_admin_pagos_sync_action(pagos_client, pagos_app, pagos_db, Pagos):
         assert action_resp.status_code in (200, 302)
 
         pagos_db.session.expire_all()
-        refreshed = pagos_db.session.query(Pagos).filter_by(session_id=session_id).first()
+        refreshed = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         # DummyProvider always returns a terminal state
         assert refreshed.state != "pending"

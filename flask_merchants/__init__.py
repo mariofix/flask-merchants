@@ -736,7 +736,12 @@ class FlaskMerchants:
                 if record is not None:
                     return record.to_dict()
             return None
-        return self._store.get(payment_id)
+        if payment_id in self._store:
+            return self._store[payment_id]
+        for data in self._store.values():
+            if data.get("transaction_id") == payment_id:
+                return data
+        return None
 
     def update_state(self, payment_id: str, state: str) -> bool:
         """Update the stored state for *payment_id*. Returns ``True`` on success.
@@ -786,10 +791,14 @@ class FlaskMerchants:
             self._store[payment_id]["state"] = state
             return True
 
-        if payment_id not in self._store:
-            return False
-        self._store[payment_id]["state"] = state
-        return True
+        if payment_id in self._store:
+            self._store[payment_id]["state"] = state
+            return True
+        for data in self._store.values():
+            if data.get("transaction_id") == payment_id:
+                data["state"] = state
+                return True
+        return False
 
     def refund_session(self, payment_id: str) -> bool:
         """Mark *payment_id* as refunded. Returns ``True`` on success.

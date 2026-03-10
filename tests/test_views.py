@@ -14,9 +14,9 @@ def test_checkout_json_response(client):
     )
     assert resp.status_code == 200
     data = resp.get_json()
-    assert "session_id" in data
+    assert "transaction_id" in data
     assert "redirect_url" in data
-    assert data["session_id"].startswith("dummy_sess_")
+    assert data["transaction_id"].startswith("dummy_sess_")
 
 
 def test_checkout_stores_session(client, ext):
@@ -25,7 +25,7 @@ def test_checkout_stores_session(client, ext):
         "/merchants/checkout",
         json={"amount": "5.00", "currency": "USD"},
     )
-    session_id = resp.get_json()["session_id"]
+    session_id = resp.get_json()["transaction_id"]
     stored = ext.get_session(session_id)
     assert stored is not None
     assert stored["amount"] == "5.00"
@@ -54,9 +54,9 @@ def test_checkout_with_metadata(client, ext):
         "/merchants/checkout",
         json={"amount": "20.00", "currency": "GBP", "metadata": {"order_id": "ord_1"}},
     )
-    session_id = resp.get_json()["session_id"]
+    session_id = resp.get_json()["transaction_id"]
     stored = ext.get_session(session_id)
-    assert stored["metadata"] == {"order_id": "ord_1"}
+    assert stored["request_payload"]["metadata"] == {"order_id": "ord_1"}
 
 
 # ---------------------------------------------------------------------------
@@ -75,13 +75,13 @@ def test_success_view_no_payment_id(client):
 def test_success_view_with_payment_id(client, ext):
     # Create a session first
     resp = client.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
-    session_id = resp.get_json()["session_id"]
+    session_id = resp.get_json()["transaction_id"]
 
     resp = client.get(f"/merchants/success?payment_id={session_id}")
     data = resp.get_json()
     assert data["status"] == "success"
     assert data["payment_id"] == session_id
-    assert data["stored"]["session_id"] == session_id
+    assert data["stored"]["transaction_id"] == session_id
 
 
 def test_cancel_view(client):
@@ -99,7 +99,7 @@ def test_cancel_view(client):
 def test_payment_status_returns_state(client, ext):
     """Status endpoint returns state info from the provider."""
     resp = client.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
-    session_id = resp.get_json()["session_id"]
+    session_id = resp.get_json()["transaction_id"]
 
     resp = client.get(f"/merchants/status/{session_id}")
     assert resp.status_code == 200
@@ -128,7 +128,7 @@ def test_payment_status_updates_store(client, ext):
     with test_app.test_client() as tc:
         # Create session
         resp = tc.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
-        session_id = resp.get_json()["session_id"]
+        session_id = resp.get_json()["transaction_id"]
 
         # Check status - should update store to succeeded
         tc.get(f"/merchants/status/{session_id}")
