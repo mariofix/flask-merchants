@@ -4,7 +4,7 @@ Install the optional dependency before using this module::
 
     pip install "flask-merchants[admin]"
 
-Example – manual registration::
+Example - manual registration::
 
     from flask import Flask
     from flask_admin import Admin
@@ -18,16 +18,20 @@ Example – manual registration::
     admin.add_view(PaymentView(ext, name="Payments", endpoint="payments"))
     admin.add_view(ProvidersView(ext, name="Providers", endpoint="providers"))
 
-Example – automatic registration (pass ``admin=`` to FlaskMerchants)::
+Example - automatic registration (pass ``admin=`` to FlaskMerchants)::
 
     from flask import Flask
+    from flask_sqlalchemy import SQLAlchemy
     from flask_admin import Admin
     from flask_merchants import FlaskMerchants
+    from flask_merchants.models import PaymentMixin
 
     app = Flask(__name__)
+    db = SQLAlchemy(model_class=Base)
     admin = Admin(app, name="My Shop")
-    ext = FlaskMerchants(app, admin=admin)
-    # PaymentView and ProvidersView are automatically added under category="Merchants"
+    ext = FlaskMerchants(app, db=db, models=[MyPayment], admin=admin)
+    # A PaymentModelView for MyPayment (SQLAlchemy-backed, with full column config)
+    # and a ProvidersView are automatically added under category="Merchants".
 """
 
 from __future__ import annotations
@@ -35,7 +39,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from flask import flash
-from markupsafe import Markup
+
+from flask_merchants.contrib.base import PaymentViewMixin, _STATE_CHOICES
 
 try:
     from flask_admin.actions import action
@@ -73,43 +78,24 @@ def _get_auth_info(auth) -> dict[str, str]:
     When *auth* is ``None`` an empty/unauthenticated descriptor is returned.
     """
     if auth is None:
-        return {"type": "None", "header": "—", "masked_value": "—"}
+        return {"type": "None", "header": "-", "masked_value": "-"}
 
     auth_type = type(auth).__name__
     # ApiKeyAuth stores the key in _api_key; TokenAuth in _token
     raw = getattr(auth, "_api_key", None) or getattr(auth, "_token", None) or ""
-    header = getattr(auth, "_header", "—")
+    header = getattr(auth, "_header", "-")
     return {
         "type": auth_type,
         "header": str(header),
-        "masked_value": _mask_secret(raw) if raw else "—",
+        "masked_value": _mask_secret(raw) if raw else "-",
     }
-
-
-_STATE_CHOICES = [
-    ("pending", "Pending"),
-    ("processing", "Processing"),
-    ("succeeded", "Succeeded"),
-    ("failed", "Failed"),
-    ("cancelled", "Cancelled"),
-    ("refunded", "Refunded"),
-    ("unknown", "Unknown"),
-]
-
-_STATE_BADGE_CLASSES = {
-    "succeeded": "success",
-    "failed": "danger",
-    "cancelled": "dark",
-    "refunded": "warning",
-    "processing": "info",
-}
 
 
 class _PaymentRecord:
     """Placeholder model class used as the ``model`` argument for :class:`PaymentView`."""
 
 
-class PaymentView(BaseModelView):
+class PaymentView(PaymentViewMixin, BaseModelView):
     """Flask-Admin view that lists all stored payments and allows managing them.
 
     Extends :class:`~flask_admin.model.BaseModelView` so the list page gains
@@ -129,41 +115,16 @@ class PaymentView(BaseModelView):
     """
 
     # Disable create/delete; enable modal edit for state changes.
-    can_create = False
-    can_delete = False
+    can_create = True
+    can_delete = True
     can_edit = True
     can_view_details = True
-    edit_modal = True
+    edit_modal = False
 
-    # Column configuration
-    column_list = ["session_id", "provider", "amount", "currency", "state"]
-    column_details_list = ["session_id", "provider", "amount", "currency", "state"]
-    column_searchable_list = ["session_id", "provider", "state"]
+    # Column configuration (core columns + details/search/sort for in-memory backend)
+    column_details_list = ["merchants_id", "transaction_id", "provider", "amount", "currency", "state"]
+    column_searchable_list = ["merchants_id", "transaction_id", "provider", "state"]
     column_sortable_list = ["provider", "amount", "currency", "state"]
-    column_labels = {
-        "session_id": "Payment ID",
-        "provider": "Provider",
-        "amount": "Amount",
-        "currency": "Currency",
-        "state": "State",
-    }
-
-    column_formatters = {
-        "state": lambda v, c, m, n: Markup(
-            '<span class="badge badge-{cls}">{val}</span>'.format(
-                cls=_STATE_BADGE_CLASSES.get(
-                    (val := v._get_field_value(m, n) or ""), "secondary"
-                ),
-                val=val,
-            )
-        ),
-        "session_id": lambda v, c, m, n: Markup(
-            "<small>{}</small>".format(v._get_field_value(m, n) or "")
-        ),
-    }
-
-    # State choices exposed to templates via ``admin_view.state_choices``.
-    state_choices = _STATE_CHOICES
 
     def __init__(
         self,
@@ -187,7 +148,7 @@ class PaymentView(BaseModelView):
     # ------------------------------------------------------------------
 
     def scaffold_list_columns(self) -> list[str]:
-        return ["session_id", "provider", "amount", "currency", "state"]
+        return ["merchants_id", "transaction_id", "provider", "amount", "currency", "state"]
 
     def scaffold_sortable_columns(self) -> dict[str, str]:
         return {
@@ -203,7 +164,11 @@ class PaymentView(BaseModelView):
         choices = _STATE_CHOICES
 
         class StateForm(WTForm):
-            state = SelectField("State", choices=choices)
+            state = SelectField(
+                "State",
+                choices=choices,
+                description="The current processing state of this payment session.",
+            )
 
         return StateForm
 
@@ -222,8 +187,8 @@ class PaymentView(BaseModelView):
 
     def get_pk_value(self, model) -> str | None:
         if isinstance(model, dict):
-            return model.get("session_id")
-        return getattr(model, "session_id", None)
+            return model.get("merchants_id")
+        return getattr(model, "merchants_id", None)
 
     def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
         payments = self._ext.all_sessions()
@@ -233,7 +198,8 @@ class PaymentView(BaseModelView):
             payments = [
                 p
                 for p in payments
-                if search_lower in str(p.get("session_id", "")).lower()
+                if search_lower in str(p.get("merchants_id", "")).lower()
+                or search_lower in str(p.get("transaction_id", "")).lower()
                 or search_lower in str(p.get("provider", "")).lower()
                 or search_lower in str(p.get("state", "")).lower()
             ]
@@ -277,7 +243,7 @@ class PaymentView(BaseModelView):
         return "No payments recorded yet."
 
     # ------------------------------------------------------------------
-    # Bulk actions – shown in the "With selected" dropdown
+    # Bulk actions - shown in the "With selected" dropdown
     # ------------------------------------------------------------------
 
     @action(
@@ -358,8 +324,17 @@ class ProvidersView(BaseModelView):
         "transport": "Transport",
         "payment_count": "Payments",
     }
+    column_descriptions = {
+        "key": "Unique identifier used to reference this provider in the application.",
+        "base_url": "Base API endpoint URL for this provider.",
+        "auth_type": "Authentication strategy used for API requests (e.g. ApiKeyAuth, TokenAuth).",
+        "auth_header": "HTTP header name used to send authentication credentials.",
+        "auth_masked_value": "Masked authentication token (first 5 and last 1 characters shown).",
+        "transport": "HTTP transport class used for provider API communication.",
+        "payment_count": "Number of payment sessions recorded for this provider.",
+    }
 
-    # Custom list template – extends admin/model/list.html for consistent UI.
+    # Custom list template - extends admin/model/list.html for consistent UI.
     list_template = "flask_merchants/admin/providers_list.html"
 
     def __init__(
@@ -431,12 +406,9 @@ class ProvidersView(BaseModelView):
         for key in provider_keys:
             try:
                 client = self._ext.get_client(key)
-                base_url = (
-                    getattr(client._provider, "_base_url", "")
-                    or getattr(client, "_base_url", "N/A")
-                    or "N/A"
-                )
-                auth_info = _get_auth_info(client._auth)
+                base_url = getattr(client._provider, "_base_url", "") or getattr(client, "_base_url", "N/A") or "N/A"
+                auth_src = client._auth or getattr(client._provider, "_auth", None)
+                auth_info = _get_auth_info(auth_src)
                 transport = type(client._transport).__name__
             except Exception:  # noqa: BLE001
                 base_url = "N/A"
@@ -487,9 +459,7 @@ class ProvidersView(BaseModelView):
         return count, providers
 
     def get_one(self, id: str):
-        return next(
-            (p for p in self._build_providers_list() if p.get("key") == id), None
-        )
+        return next((p for p in self._build_providers_list() if p.get("key") == id), None)
 
     def create_model(self, form):
         return False
@@ -504,15 +474,26 @@ class ProvidersView(BaseModelView):
         return "No providers registered."
 
 
-def register_admin_views(admin, ext: "FlaskMerchants", *, payment_name: str = "Payments", provider_name: str = "Providers") -> None:
+def register_admin_views(
+    admin, ext: "FlaskMerchants", *, payment_name: str = "Payments", provider_name: str = "Providers"
+) -> None:
     """Register the standard Merchants admin views into *admin*.
 
-    This registers :class:`PaymentView` and :class:`ProvidersView` under
-    ``category="Merchants"``.  It is called automatically when you pass
-    ``admin=`` to :class:`~flask_merchants.FlaskMerchants`::
+    When a SQLAlchemy *db* was supplied to the extension a
+    :class:`~flask_merchants.contrib.sqla.PaymentModelView` is registered for
+    each payment model class — inheriting the full column configuration from
+    :class:`~flask_merchants.contrib.base.PaymentViewMixin` (formatters,
+    descriptions, labels, state choices).  When no *db* is configured the
+    in-memory :class:`PaymentView` is used as a fallback.
+
+    :class:`ProvidersView` is always registered under ``category="Merchants"``.
+
+    Called automatically when you pass ``admin=`` to
+    :class:`~flask_merchants.FlaskMerchants`::
 
         admin = Admin(app, name="My Shop")
-        ext = FlaskMerchants(app, admin=admin)
+        ext = FlaskMerchants(app, db=db, models=[Payment], admin=admin)
+        # A PaymentModelView for Payment and a ProvidersView are added automatically.
 
     You can also call it manually if you need finer control::
 
@@ -529,14 +510,31 @@ def register_admin_views(admin, ext: "FlaskMerchants", *, payment_name: str = "P
         payment_name: Display name for the Payments menu item.
         provider_name: Display name for the Providers menu item.
     """
-    admin.add_view(
-        PaymentView(
-            ext,
-            name=payment_name,
-            endpoint="merchants_payments",
-            category="Merchants",
+    if ext._db is not None:
+        from flask_merchants.contrib.sqla import PaymentModelView
+
+        for model_cls in ext._get_model_classes():
+            endpoint = f"merchants_{model_cls.__tablename__}"
+            admin.add_view(
+                PaymentModelView(
+                    model_cls,
+                    ext._db.session,
+                    ext=ext,
+                    name=payment_name,
+                    endpoint=endpoint,
+                    category="Merchants",
+                )
+            )
+    else:
+        admin.add_view(
+            PaymentView(
+                ext,
+                name=payment_name,
+                endpoint="merchants_payments",
+                category="Merchants",
+            )
         )
-    )
+
     admin.add_view(
         ProvidersView(
             ext,
