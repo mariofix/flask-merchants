@@ -44,7 +44,7 @@ from decimal import Decimal
 from typing import Any
 
 import merchants as _merchants_registry
-from sqlalchemy import DateTime, JSON, Numeric, String, func, inspect, text
+from sqlalchemy import JSON, DateTime, Numeric, String, func, inspect, text
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 logger = logging.getLogger(__name__)
@@ -325,7 +325,9 @@ class PaymentMixin:
             # Provider call failed — persist a failed record
             logger.error(
                 "Payment creation failed for provider=%r amount=%s: %s",
-                provider, amount, exc,
+                provider,
+                amount,
+                exc,
             )
             record = cls(
                 merchants_id=local_merchants_id,
@@ -348,8 +350,11 @@ class PaymentMixin:
 
         logger.info(
             "Payment created: merchants_id=%s transaction_id=%s provider=%s amount=%s state=%s",
-            record.merchants_id, record.transaction_id, record.provider,
-            record.amount, record.state,
+            record.merchants_id,
+            record.transaction_id,
+            record.provider,
+            record.amount,
+            record.state,
         )
         return record
 
@@ -402,7 +407,9 @@ class PaymentMixin:
         ext._db.session.commit()
         logger.info(
             "Payment synced from provider: merchants_id=%s transaction_id=%s new_state=%s",
-            self.merchants_id, self.transaction_id, self.state,
+            self.merchants_id,
+            self.transaction_id,
+            self.state,
         )
         return self
 
