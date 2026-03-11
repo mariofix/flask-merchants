@@ -38,9 +38,7 @@ def sqla_app():
     ext = FlaskMerchants(application, db=db, models=[Payment])
 
     admin_inst = Admin(application, name="Test Admin")
-    admin_inst.add_view(
-        PaymentModelView(Payment, db.session, ext=ext, name="Payments", endpoint="payments")
-    )
+    admin_inst.add_view(PaymentModelView(Payment, db.session, ext=ext, name="Payments", endpoint="payments"))
 
     application.extensions["test_db"] = db
     application.extensions["test_ext"] = ext

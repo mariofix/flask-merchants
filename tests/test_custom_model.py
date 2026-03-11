@@ -47,9 +47,7 @@ def pagos_app():
     ext = FlaskMerchants(application, db=db, model=Pagos)
 
     admin_inst = Admin(application, name="Test Admin")
-    admin_inst.add_view(
-        PaymentModelView(Pagos, db.session, ext=ext, name="Pagos", endpoint="pagos")
-    )
+    admin_inst.add_view(PaymentModelView(Pagos, db.session, ext=ext, name="Pagos", endpoint="pagos"))
 
     application.extensions["test_db"] = db
     application.extensions["test_ext"] = ext

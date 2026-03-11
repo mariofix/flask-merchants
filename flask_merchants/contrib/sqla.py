@@ -167,9 +167,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         if model.state not in valid_states:
             from wtforms import ValidationError
 
-            raise ValidationError(
-                f"Invalid state {model.state!r}. Choose one of: {', '.join(sorted(valid_states))}."
-            )
+            raise ValidationError(f"Invalid state {model.state!r}. Choose one of: {', '.join(sorted(valid_states))}.")
 
     def after_model_change(self, form, model, is_created: bool) -> None:
         """Called after a successful commit.

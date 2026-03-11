@@ -325,9 +325,7 @@ class FlaskMerchants:
     def client(self) -> merchants.Client:
         """The underlying :class:`merchants.Client` instance (default provider)."""
         if self._client is None:
-            raise RuntimeError(
-                "FlaskMerchants extension not initialised. Call init_app(app) first."
-            )
+            raise RuntimeError("FlaskMerchants extension not initialised. Call init_app(app) first.")
         return self._client
 
     def list_providers(self) -> list[str]:
@@ -360,9 +358,7 @@ class FlaskMerchants:
             client = ext.get_client("stripe")
             session = client.payments.create_checkout(...)
         """
-        logger.debug(
-            "__init__.py: FlaskMerchants.get_client called with provider_key=%r", provider_key
-        )
+        logger.debug("__init__.py: FlaskMerchants.get_client called with provider_key=%r", provider_key)
         if provider_key is None:
             return self.client
         if provider_key not in self._clients:
@@ -388,9 +384,7 @@ class FlaskMerchants:
             url = ext.get_webhook_url("khipu")
             # -> "https://example.com/merchants/webhook/khipu"
         """
-        logger.debug(
-            "__init__.py: FlaskMerchants.get_webhook_url called with provider=%r", provider
-        )
+        logger.debug("__init__.py: FlaskMerchants.get_webhook_url called with provider=%r", provider)
         if not self._webhook_base_url:
             raise RuntimeError(
                 "MERCHANTS_WEBHOOK_BASE_URL is not configured. "
@@ -502,10 +496,7 @@ class FlaskMerchants:
 
         subject = f"[webhook] {provider} — {transaction or 'no-id'}"
         body_text = (
-            f"provider: {provider}\n"
-            f"transaction: {transaction}\n"
-            f"headers:\n{headers_json}\n\n"
-            f"body:\n{body_json}\n"
+            f"provider: {provider}\ntransaction: {transaction}\nheaders:\n{headers_json}\n\nbody:\n{body_json}\n"
         )
 
         notification_info = {
@@ -586,8 +577,7 @@ class FlaskMerchants:
         if self._models:
             return self._models
         raise RuntimeError(
-            "No payment model classes registered. Pass models=[YourPaymentModel] "
-            "to FlaskMerchants() or init_app()."
+            "No payment model classes registered. Pass models=[YourPaymentModel] to FlaskMerchants() or init_app()."
         )
 
     @property
@@ -723,16 +713,12 @@ class FlaskMerchants:
         """
         if self._db is not None:
             for model_cls in self._get_model_classes():
-                record = (
-                    self._db.session.query(model_cls).filter_by(merchants_id=payment_id).first()
-                )
+                record = self._db.session.query(model_cls).filter_by(merchants_id=payment_id).first()
                 if record is not None:
                     return record.to_dict()
             # Fallback: search by transaction_id
             for model_cls in self._get_model_classes():
-                record = (
-                    self._db.session.query(model_cls).filter_by(transaction_id=payment_id).first()
-                )
+                record = self._db.session.query(model_cls).filter_by(transaction_id=payment_id).first()
                 if record is not None:
                     return record.to_dict()
             return None
@@ -763,19 +749,13 @@ class FlaskMerchants:
         if self._db is not None:
             record = None
             for model_cls in self._get_model_classes():
-                record = (
-                    self._db.session.query(model_cls).filter_by(merchants_id=payment_id).first()
-                )
+                record = self._db.session.query(model_cls).filter_by(merchants_id=payment_id).first()
                 if record is not None:
                     break
             # Fallback: search by transaction_id
             if record is None:
                 for model_cls in self._get_model_classes():
-                    record = (
-                        self._db.session.query(model_cls)
-                        .filter_by(transaction_id=payment_id)
-                        .first()
-                    )
+                    record = self._db.session.query(model_cls).filter_by(transaction_id=payment_id).first()
                     if record is not None:
                         break
             if record is not None:

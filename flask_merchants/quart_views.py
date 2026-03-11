@@ -28,8 +28,7 @@ def create_async_blueprint(ext: FlaskMerchants):
         from quart import Blueprint, jsonify, redirect, request, url_for
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
-            "quart is required for flask_merchants.quart_views. "
-            "Install it with: pip install 'flask-merchants[quart]'"
+            "quart is required for flask_merchants.quart_views. Install it with: pip install 'flask-merchants[quart]'"
         ) from exc
 
     bp = Blueprint("merchants", __name__, template_folder="templates")

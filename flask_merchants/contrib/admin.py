@@ -414,11 +414,7 @@ class ProvidersView(BaseModelView):
         for key in provider_keys:
             try:
                 client = self._ext.get_client(key)
-                base_url = (
-                    getattr(client._provider, "_base_url", "")
-                    or getattr(client, "_base_url", "N/A")
-                    or "N/A"
-                )
+                base_url = getattr(client._provider, "_base_url", "") or getattr(client, "_base_url", "N/A") or "N/A"
                 auth_src = client._auth or getattr(client._provider, "_auth", None)
                 auth_info = _get_auth_info(auth_src)
                 transport = type(client._transport).__name__

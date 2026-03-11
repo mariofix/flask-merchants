@@ -52,12 +52,8 @@ def multi_app():
     ext = FlaskMerchants(application, db=db, models=[Pagos, Paiements])
 
     admin_inst = Admin(application, name="Test Admin")
-    admin_inst.add_view(
-        PaymentModelView(Pagos, db.session, ext=ext, name="Pagos", endpoint="pagos")
-    )
-    admin_inst.add_view(
-        PaymentModelView(Paiements, db.session, ext=ext, name="Paiements", endpoint="paiements")
-    )
+    admin_inst.add_view(PaymentModelView(Pagos, db.session, ext=ext, name="Pagos", endpoint="pagos"))
+    admin_inst.add_view(PaymentModelView(Paiements, db.session, ext=ext, name="Paiements", endpoint="paiements"))
 
     application.extensions["test_db"] = db
     application.extensions["test_ext"] = ext
@@ -173,9 +169,7 @@ def test_save_session_to_pagos(multi_client, multi_app, multi_db, multi_ext, Pag
         session_id = resp.get_json()["transaction_id"]
 
         pagos_record = multi_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
-        paiements_record = (
-            multi_db.session.query(Paiements).filter_by(transaction_id=session_id).first()
-        )
+        paiements_record = multi_db.session.query(Paiements).filter_by(transaction_id=session_id).first()
 
         assert pagos_record is not None, "Expected record in Pagos table"
         assert paiements_record is None, "Should NOT be in Paiements table"
@@ -192,12 +186,8 @@ def test_save_session_explicit_paiements(multi_app, multi_db, multi_ext, Pagos, 
         )
         multi_ext.save_session(session, model_class=Paiements)
 
-        pagos_record = (
-            multi_db.session.query(Pagos).filter_by(transaction_id=session.session_id).first()
-        )
-        paiements_record = (
-            multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
-        )
+        pagos_record = multi_db.session.query(Pagos).filter_by(transaction_id=session.session_id).first()
+        paiements_record = multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
 
         assert paiements_record is not None, "Expected record in Paiements table"
         assert pagos_record is None, "Should NOT be in Pagos table"
@@ -259,9 +249,7 @@ def test_update_state_on_paiements(multi_app, multi_db, multi_ext, Paiements):
         result = multi_ext.update_state(session.session_id, "succeeded")
         assert result is True
 
-        record = (
-            multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
-        )
+        record = multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
         assert record.state == "succeeded"
 
 
@@ -352,9 +340,7 @@ def test_admin_refund_paiements(multi_client, multi_app, multi_db, multi_ext, Pa
         )
         multi_ext.save_session(session, model_class=Paiements)
 
-        record = (
-            multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
-        )
+        record = multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
         pk = str(record.id)
 
         resp = multi_client.post(
@@ -364,7 +350,5 @@ def test_admin_refund_paiements(multi_client, multi_app, multi_db, multi_ext, Pa
         assert resp.status_code in (200, 302)
 
         multi_db.session.expire_all()
-        refreshed = (
-            multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
-        )
+        refreshed = multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
         assert refreshed.state == "refunded"

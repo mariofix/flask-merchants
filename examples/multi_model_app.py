@@ -82,9 +82,7 @@ db.init_app(app)
 
 admin = Admin(app, name="Multi-Model Admin")
 admin.add_view(PaymentModelView(Pagos, db.session, ext=ext, name="Pagos", endpoint="pagos"))
-admin.add_view(
-    PaymentModelView(Paiements, db.session, ext=ext, name="Paiements", endpoint="paiements")
-)
+admin.add_view(PaymentModelView(Paiements, db.session, ext=ext, name="Paiements", endpoint="paiements"))
 
 with app.app_context():
     db.create_all()

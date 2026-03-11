@@ -149,8 +149,7 @@ class PaymentMixin:
         """
         if value not in self.VALID_STATES:
             raise ValueError(
-                f"Invalid payment state {value!r}. "
-                f"Allowed values: {', '.join(sorted(self.VALID_STATES))}."
+                f"Invalid payment state {value!r}. Allowed values: {', '.join(sorted(self.VALID_STATES))}."
             )
         return value
 
