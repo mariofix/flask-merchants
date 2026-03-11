@@ -1,5 +1,3 @@
-"""Blueprint with checkout, webhook, success and cancel routes."""
-
 from __future__ import annotations
 
 import hashlib
@@ -171,7 +169,10 @@ def create_blueprint(ext: FlaskMerchants) -> Blueprint:
             sig = request.headers.get("X-Merchants-Signature", "")
             if not sig:
                 return jsonify({"error": "missing signature"}), 400
-            expected = "sha256=" + _hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
+            expected = (
+                "sha256="
+                + _hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
+            )
             if not _hmac.compare_digest(sig, expected):
                 return jsonify({"error": "invalid signature"}), 400
         headers: dict[str, str] = dict(request.headers)

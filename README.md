@@ -1,6 +1,6 @@
 # flask-merchants
 
-A Flask/Quart extension for the [merchants](https://github.com/mariofix/merchnts-cp) hosted-checkout payment SDK.
+A Flask/Quart extension for the [merchants](https://github.com/mariofix/merchants) payment SDK.
 
 ## Features
 
