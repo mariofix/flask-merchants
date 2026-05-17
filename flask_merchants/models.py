@@ -129,6 +129,7 @@ class PaymentMixin:
     payment_object: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
+        default=datetime.now(),
         server_default=func.now(),
     )
     updated_at: Mapped[datetime] = mapped_column(
