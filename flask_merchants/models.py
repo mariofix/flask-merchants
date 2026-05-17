@@ -116,13 +116,13 @@ class PaymentMixin:
     raise a ``RuntimeError``.
     """
 
-    merchants_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
-    transaction_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    merchants_id: Mapped[str | None] = mapped_column(String(128), unique=True, index=True, nullable=True)
+    transaction_id: Mapped[str | None] = mapped_column(String(128), unique=True, index=True, nullable=True)
     provider: Mapped[str] = mapped_column(String(64), index=True)
-    amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))
+    amount: Mapped[Decimal | None] = mapped_column(Numeric(19, 4), nullable=True)
     currency: Mapped[str] = mapped_column(String(3))
     state: Mapped[str] = mapped_column(String(32), default="pending", index=True)
-    email: Mapped[str | None] = mapped_column(String(255), index=True)
+    email: Mapped[str] = mapped_column(String(255), index=True)
     extra_args: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
     request_payload: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
     response_payload: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
@@ -135,6 +135,7 @@ class PaymentMixin:
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
+        nullable=False
     )
 
     #: Valid lifecycle state values accepted by the model.
@@ -449,13 +450,18 @@ class PaymentMixin:
         """
         ext = self._get_ext()
         insp = inspect(self, raiseerr=False)
+
+
         if insp is None or insp.transient or insp.pending:
             raise RuntimeError("start_payment() requires a persisted payment record.")
 
         if self.state != "pending":
             raise ValueError(f"start_payment() requires state='pending', got {self.state!r}.")
 
-        required_fields = ("merchants_id", "provider", "amount", "currency")
+        if not self.merchants_id:
+            self.merchants_id = str(uuid.uuid4())
+
+        required_fields = ("provider", "amount", "currency")
         missing = [field for field in required_fields if not getattr(self, field, None)]
         if missing:
             raise ValueError(f"start_payment() missing required field(s): {', '.join(missing)}.")
