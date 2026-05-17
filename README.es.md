@@ -229,6 +229,35 @@ app = Flask(__name__)
 ext = FlaskMerchants(app, db=db, models=[Pagos])
 ```
 
+### Iniciar pago sobre un registro persistido
+
+Cuando tu objeto de dominio ya está guardado (por ejemplo, una orden creada
+antes del checkout), llama a `start_payment()` sobre la instancia:
+
+```python
+with app.app_context():
+    pago = Pagos(
+        merchants_id="order-42",
+        transaction_id="pending-order-42",
+        provider="dummy",
+        amount="19.99",
+        currency="USD",
+        state="pending",
+    )
+    db.session.add(pago)
+    db.session.commit()
+
+    redirect_url = pago.start_payment(
+        success_url="https://example.com/success",
+        cancel_url="https://example.com/cancel",
+        extra_args={"reference": "order-42"},
+    )
+```
+
+`start_payment()` valida que el registro esté persistido y en `state="pending"`,
+guarda payloads de request/response para auditoría, actualiza los datos de la
+transacción del proveedor, hace `commit` y retorna `redirect_url`.
+
 ### Múltiples modelos de pago en la misma aplicación
 
 Una **única** instancia de `FlaskMerchants` puede gestionar cualquier número de

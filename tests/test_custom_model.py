@@ -126,6 +126,179 @@ def test_payment_mixin_repr(Pagos):
     assert "s2" in repr(p)
 
 
+def test_start_payment_success(pagos_app, pagos_db, Pagos):
+    """start_payment creates provider checkout and persists mutation + audit payloads."""
+    with pagos_app.app_context():
+        record = Pagos(
+            merchants_id="m-start-1",
+            transaction_id="pending-start-1",
+            provider="dummy",
+            amount=Decimal("12.34"),
+            currency="USD",
+            state="pending",
+            email="user@example.com",
+        )
+        pagos_db.session.add(record)
+        pagos_db.session.commit()
+
+        checkout_url = record.start_payment(
+            success_url="https://example.test/success",
+            cancel_url="https://example.test/cancel",
+            extra_args={"reference": "order-42"},
+        )
+
+        assert checkout_url
+        assert record.transaction_id.startswith("dummy_sess_")
+        assert record.state == "pending"
+        assert record.request_payload["success_url"] == "https://example.test/success"
+        assert record.request_payload["cancel_url"] == "https://example.test/cancel"
+        assert record.request_payload["reference"] == "order-42"
+        assert record.response_payload["redirect_url"] == checkout_url
+        assert record.extra_args["reference"] == "order-42"
+
+        pagos_db.session.expire_all()
+        refreshed = pagos_db.session.query(Pagos).filter_by(id=record.id).first()
+        assert refreshed.transaction_id == record.transaction_id
+        assert refreshed.response_payload["redirect_url"] == checkout_url
+
+
+def test_start_payment_requires_persisted_record(pagos_app, Pagos):
+    """start_payment rejects transient records that are not in the database yet."""
+    with pagos_app.app_context():
+        record = Pagos(
+            merchants_id="m-transient",
+            transaction_id="pending-transient",
+            provider="dummy",
+            amount=Decimal("10.00"),
+            currency="USD",
+            state="pending",
+        )
+
+        with pytest.raises(RuntimeError, match="persisted payment record"):
+            record.start_payment(
+                success_url="https://example.test/success",
+                cancel_url="https://example.test/cancel",
+            )
+
+
+def test_start_payment_requires_pending_state(pagos_app, pagos_db, Pagos):
+    """start_payment only allows records that are still pending."""
+    with pagos_app.app_context():
+        record = Pagos(
+            merchants_id="m-not-pending",
+            transaction_id="pending-not-pending",
+            provider="dummy",
+            amount=Decimal("10.00"),
+            currency="USD",
+            state="succeeded",
+        )
+        pagos_db.session.add(record)
+        pagos_db.session.commit()
+
+        with pytest.raises(ValueError, match="state='pending'"):
+            record.start_payment(
+                success_url="https://example.test/success",
+                cancel_url="https://example.test/cancel",
+            )
+
+
+def test_start_payment_requires_required_fields(pagos_app, pagos_db, Pagos):
+    """start_payment validates required fields before contacting a provider."""
+    with pagos_app.app_context():
+        record = Pagos(
+            merchants_id="m-missing-provider",
+            transaction_id="pending-missing-provider",
+            provider="",
+            amount=Decimal("10.00"),
+            currency="USD",
+            state="pending",
+        )
+        pagos_db.session.add(record)
+        pagos_db.session.commit()
+
+        with pytest.raises(ValueError, match="missing required field"):
+            record.start_payment(
+                success_url="https://example.test/success",
+                cancel_url="https://example.test/cancel",
+            )
+
+
+def test_start_payment_bubbles_provider_errors(pagos_app, pagos_db, Pagos, pagos_ext, monkeypatch):
+    """start_payment propagates provider exceptions to the caller."""
+    with pagos_app.app_context():
+        record = Pagos(
+            merchants_id="m-provider-error",
+            transaction_id="pending-provider-error",
+            provider="dummy",
+            amount=Decimal("19.99"),
+            currency="USD",
+            state="pending",
+        )
+        pagos_db.session.add(record)
+        pagos_db.session.commit()
+
+        class _BrokenPayments:
+            @staticmethod
+            def create_checkout(**_kwargs):
+                raise RuntimeError("provider unavailable")
+
+        class _BrokenClient:
+            payments = _BrokenPayments()
+
+        monkeypatch.setattr(pagos_ext, "get_client", lambda _provider: _BrokenClient())
+
+        with pytest.raises(RuntimeError, match="provider unavailable"):
+            record.start_payment(
+                success_url="https://example.test/success",
+                cancel_url="https://example.test/cancel",
+            )
+
+
+def test_start_payment_requires_redirect_url(pagos_app, pagos_db, Pagos, pagos_ext, monkeypatch):
+    """start_payment fails when provider does not return a redirect URL."""
+    with pagos_app.app_context():
+        record = Pagos(
+            merchants_id="m-no-redirect",
+            transaction_id="pending-no-redirect",
+            provider="dummy",
+            amount=Decimal("8.00"),
+            currency="USD",
+            state="pending",
+        )
+        pagos_db.session.add(record)
+        pagos_db.session.commit()
+
+        class _State:
+            value = "pending"
+
+        class _Session:
+            raw = {"simulated": True}
+            redirect_url = None
+            session_id = "dummy-no-redirect"
+            provider = "dummy"
+            amount = Decimal("8.00")
+            currency = "USD"
+            initial_state = _State()
+
+        class _NoRedirectPayments:
+            @staticmethod
+            def create_checkout(**_kwargs):
+                return _Session()
+
+        class _NoRedirectClient:
+            payments = _NoRedirectPayments()
+
+        monkeypatch.setattr(pagos_ext, "get_client", lambda _provider: _NoRedirectClient())
+
+        with pytest.raises(RuntimeError, match="redirect URL"):
+            record.start_payment(
+                success_url="https://example.test/success",
+                cancel_url="https://example.test/cancel",
+            )
+
+        assert record.transaction_id == "pending-no-redirect"
+
+
 # ---------------------------------------------------------------------------
 # Store helpers with custom model
 # ---------------------------------------------------------------------------

@@ -227,6 +227,35 @@ app = Flask(__name__)
 ext = FlaskMerchants(app, db=db, models=[Pagos])
 ```
 
+### Initiate payment on a persisted record
+
+When your domain object is already stored (for example, an order created before
+checkout), call `start_payment()` on the model instance:
+
+```python
+with app.app_context():
+    pago = Pagos(
+        merchants_id="order-42",
+        transaction_id="pending-order-42",
+        provider="dummy",
+        amount="19.99",
+        currency="USD",
+        state="pending",
+    )
+    db.session.add(pago)
+    db.session.commit()
+
+    redirect_url = pago.start_payment(
+        success_url="https://example.com/success",
+        cancel_url="https://example.com/cancel",
+        extra_args={"reference": "order-42"},
+    )
+```
+
+`start_payment()` validates that the record is persisted and `state="pending"`,
+stores request/response payloads for audit trail, updates provider transaction
+data, commits the mutation, and returns `redirect_url`.
+
 ### Multiple payment models in the same app
 
 A **single** `FlaskMerchants` instance can manage any number of models at once

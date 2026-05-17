@@ -32,6 +32,13 @@ Payment creation via the ``create()`` classmethod::
     )
     # payment is already persisted with request/response payloads populated.
     # On provider failure, a record with state="failed" is stored.
+
+Payment initiation on an already-persisted record::
+
+    checkout_url = payment.start_payment(
+        success_url="https://example.com/ok",
+        cancel_url="https://example.com/cancel",
+    )
 """
 
 from __future__ import annotations
@@ -411,6 +418,111 @@ class PaymentMixin:
             self.state,
         )
         return self
+
+    def start_payment(
+        self,
+        *,
+        success_url: str,
+        cancel_url: str,
+        extra_args: dict[str, Any] | None = None,
+    ) -> str:
+        """Initiate provider checkout for an already-persisted payment record.
+
+        This is intended for domain-object-bound flows where the record already
+        exists and payment must be initiated later in the object's lifecycle.
+
+        Args:
+            success_url: URL to redirect to on successful payment.
+            cancel_url: URL to redirect to on cancelled payment.
+            extra_args: Provider-specific kwargs unpacked into
+                ``create_checkout()`` and stored in ``extra_args``.
+
+        Returns:
+            Provider checkout redirect URL.
+
+        Raises:
+            RuntimeError: If called on a non-persisted record or the provider
+                response omits a redirect URL.
+            ValueError: If the payment is not in a startable state.
+            KeyError: If the configured provider is not registered.
+            Exception: Propagates provider errors.
+        """
+        ext = self._get_ext()
+        insp = inspect(self, raiseerr=False)
+        if insp is None or insp.transient or insp.pending:
+            raise RuntimeError("start_payment() requires a persisted payment record.")
+
+        if self.state != "pending":
+            raise ValueError(f"start_payment() requires state='pending', got {self.state!r}.")
+
+        required_fields = ("merchants_id", "provider", "amount", "currency")
+        missing = [field for field in required_fields if not getattr(self, field, None)]
+        if missing:
+            raise ValueError(f"start_payment() missing required field(s): {', '.join(missing)}.")
+
+        provider_extra = dict(extra_args or {})
+
+        # Auto-inject webhook notify_url only when the provider accepts it.
+        try:
+            provider_obj = _merchants_registry.get_provider(self.provider)
+            if getattr(provider_obj, "accepts_notify_url", False):
+                try:
+                    notify_url = ext.get_webhook_url(self.provider)
+                    provider_extra.setdefault("notify_url", notify_url)
+                except RuntimeError:
+                    pass
+        except (KeyError, RuntimeError):
+            pass
+
+        amount = Decimal(str(self.amount))
+        request_payload = {
+            "amount": str(amount),
+            "currency": self.currency,
+            "provider": self.provider,
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+        }
+        if self.email:
+            request_payload["email"] = self.email
+        if provider_extra:
+            request_payload.update(provider_extra)
+
+        client = ext.get_client(self.provider)
+        session = client.payments.create_checkout(
+            amount=amount,
+            currency=self.currency,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"order_id": self.merchants_id},
+            **provider_extra,
+        )
+
+        response_raw = session.raw if isinstance(session.raw, dict) else {}
+        if session.redirect_url:
+            response_raw.setdefault("redirect_url", session.redirect_url)
+        else:
+            raise RuntimeError("Provider checkout session did not include a redirect URL.")
+
+        self.transaction_id = session.session_id
+        self.provider = session.provider
+        self.amount = session.amount
+        self.currency = session.currency
+        self.state = session.initial_state.value
+        self.extra_args = provider_extra
+        self.request_payload = request_payload
+        self.response_payload = response_raw
+
+        ext._db.session.commit()
+
+        logger.info(
+            "Payment started: merchants_id=%s transaction_id=%s provider=%s state=%s",
+            self.merchants_id,
+            self.transaction_id,
+            self.provider,
+            self.state,
+        )
+
+        return session.redirect_url
 
     # ------------------------------------------------------------------
     # Representation
