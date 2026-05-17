@@ -132,10 +132,7 @@ class PaymentMixin:
         server_default=func.now(),
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
     #: Valid lifecycle state values accepted by the model.
@@ -450,7 +447,6 @@ class PaymentMixin:
         """
         ext = self._get_ext()
         insp = inspect(self, raiseerr=False)
-
 
         if insp is None or insp.transient or insp.pending:
             raise RuntimeError("start_payment() requires a persisted payment record.")
