@@ -133,7 +133,7 @@ class PaymentMixin:
         server_default=func.now(),
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True), default=datetime.now(), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
     #: Valid lifecycle state values accepted by the model.
