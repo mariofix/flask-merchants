@@ -54,6 +54,13 @@ import merchants as _merchants_registry
 from sqlalchemy import JSON, DateTime, Numeric, String, func, inspect, text
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
+from flask_merchants.signals import (
+    payment_created,
+    payment_creation_failed,
+    payment_started,
+    payment_state_changed,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,7 +129,7 @@ class PaymentMixin:
     amount: Mapped[Decimal | None] = mapped_column(Numeric(19, 4), nullable=True)
     currency: Mapped[str] = mapped_column(String(3))
     state: Mapped[str] = mapped_column(String(32), default="pending", index=True)
-    email: Mapped[str] = mapped_column(String(255), index=True)
+    email: Mapped[str | None] = mapped_column(String(255), index=True, nullable=True)
     extra_args: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
     request_payload: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
     response_payload: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
@@ -348,10 +355,21 @@ class PaymentMixin:
             )
             ext._db.session.add(record)
             ext._db.session.commit()
+            ext._emit_signal(
+                payment_creation_failed,
+                payment=record,
+                model_class=cls,
+                error=exc,
+            )
             raise
 
         ext._db.session.add(record)
         ext._db.session.commit()
+        ext._emit_signal(
+            payment_created,
+            payment=record,
+            model_class=cls,
+        )
 
         logger.info(
             "Payment created: merchants_id=%s transaction_id=%s provider=%s amount=%s state=%s",
@@ -374,8 +392,19 @@ class PaymentMixin:
             self, for method chaining.
         """
         ext = self._get_ext()
+        old_state = self.state
         self.state = "refunded"
         ext._db.session.commit()
+        if old_state != self.state:
+            ext._emit_signal(
+                payment_state_changed,
+                payment=self,
+                payment_id=self.merchants_id,
+                merchants_id=self.merchants_id,
+                transaction_id=self.transaction_id,
+                old_state=old_state,
+                new_state=self.state,
+            )
         logger.info("Payment refunded: merchants_id=%s", self.merchants_id)
         return self
 
@@ -386,8 +415,19 @@ class PaymentMixin:
             self, for method chaining.
         """
         ext = self._get_ext()
+        old_state = self.state
         self.state = "cancelled"
         ext._db.session.commit()
+        if old_state != self.state:
+            ext._emit_signal(
+                payment_state_changed,
+                payment=self,
+                payment_id=self.merchants_id,
+                merchants_id=self.merchants_id,
+                transaction_id=self.transaction_id,
+                old_state=old_state,
+                new_state=self.state,
+            )
         logger.info("Payment cancelled: merchants_id=%s", self.merchants_id)
         return self
 
@@ -406,10 +446,21 @@ class PaymentMixin:
         ext = self._get_ext()
         client = ext.get_client(self.provider)
         status = client.payments.get(self.transaction_id)
+        old_state = self.state
         self.state = status.state.value
         self.response_payload = status.raw if isinstance(status.raw, dict) else {}
         self.payment_object = status.model_dump(mode="json")
         ext._db.session.commit()
+        if old_state != self.state:
+            ext._emit_signal(
+                payment_state_changed,
+                payment=self,
+                payment_id=self.merchants_id,
+                merchants_id=self.merchants_id,
+                transaction_id=self.transaction_id,
+                old_state=old_state,
+                new_state=self.state,
+            )
         logger.info(
             "Payment synced from provider: merchants_id=%s transaction_id=%s new_state=%s",
             self.merchants_id,
@@ -516,6 +567,11 @@ class PaymentMixin:
         self.response_payload = response_raw
 
         ext._db.session.commit()
+        ext._emit_signal(
+            payment_started,
+            payment=self,
+            redirect_url=session.redirect_url,
+        )
 
         logger.info(
             "Payment started: merchants_id=%s transaction_id=%s provider=%s state=%s",

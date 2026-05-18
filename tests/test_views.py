@@ -1,5 +1,7 @@
 """Tests for the checkout, success, cancel and status views."""
 
+from flask_merchants.signals import checkout_session_saved
+
 
 # ---------------------------------------------------------------------------
 # Checkout
@@ -31,6 +33,28 @@ def test_checkout_stores_session(client, ext):
     assert stored["amount"] == "5.00"
     assert stored["currency"] == "USD"
     assert stored["state"] == "pending"
+
+
+def test_checkout_emits_checkout_session_saved_signal(client, app):
+    """Checkout emits checkout_session_saved with the Flask app sender."""
+    captured = []
+
+    def _receiver(sender, **kwargs):
+        captured.append((sender, kwargs))
+
+    checkout_session_saved.connect(_receiver, sender=app, weak=False)
+    try:
+        resp = client.post("/merchants/checkout", json={"amount": "5.00", "currency": "USD"})
+    finally:
+        checkout_session_saved.disconnect(_receiver, sender=app)
+
+    transaction_id = resp.get_json()["transaction_id"]
+    assert len(captured) == 1
+    sender, payload = captured[0]
+    assert sender is app
+    assert payload["transaction_id"] == transaction_id
+    assert payload["amount"] == "5.00"
+    assert payload["currency"] == "USD"
 
 
 def test_checkout_get_redirect(client):

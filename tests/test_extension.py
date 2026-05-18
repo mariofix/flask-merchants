@@ -6,6 +6,7 @@ from flask import Flask
 from sqlalchemy.orm import DeclarativeBase
 
 from flask_merchants import FlaskMerchants
+from flask_merchants.signals import merchants_initialized
 from flask_merchants.version import __version__
 
 
@@ -34,6 +35,29 @@ def test_init_app_factory():
 
     assert "merchants" in app.extensions
     assert app.extensions["merchants"] is ext
+
+
+def test_init_app_emits_merchants_initialized_signal():
+    """init_app emits the extension-initialized signal with the Flask app sender."""
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    ext = FlaskMerchants()
+    captured = []
+
+    def _receiver(sender, **kwargs):
+        captured.append((sender, kwargs))
+
+    merchants_initialized.connect(_receiver, sender=app, weak=False)
+    try:
+        ext.init_app(app)
+    finally:
+        merchants_initialized.disconnect(_receiver, sender=app)
+
+    assert len(captured) == 1
+    sender, payload = captured[0]
+    assert sender is app
+    assert payload["ext"] is ext
+    assert payload["url_prefix"] == "/merchants"
 
 
 def test_init_app_factory_with_provider():

@@ -10,10 +10,30 @@ from typing import Any
 import merchants
 from merchants.providers.dummy import DummyProvider
 
+from flask_merchants.signals import (
+    checkout_session_saved,
+    merchants_initialized,
+    payment_created,
+    payment_creation_failed,
+    payment_started,
+    payment_state_changed,
+    webhook_event_received,
+)
 from flask_merchants.version import __version__
 from flask_merchants.views import create_blueprint
 
-__all__ = ["FlaskMerchants", "__version__", "merchants_audit"]
+__all__ = [
+    "FlaskMerchants",
+    "__version__",
+    "checkout_session_saved",
+    "merchants_audit",
+    "merchants_initialized",
+    "payment_created",
+    "payment_creation_failed",
+    "payment_started",
+    "payment_state_changed",
+    "webhook_event_received",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -316,6 +336,7 @@ class FlaskMerchants:
                 payment_name=app.config["MERCHANTS_PAYMENT_VIEW_NAME"],
                 provider_name=app.config["MERCHANTS_PROVIDER_VIEW_NAME"],
             )
+        merchants_initialized.send(app, ext=self, providers=self.list_providers(), url_prefix=url_prefix)
 
     # ------------------------------------------------------------------
     # Public API
@@ -545,6 +566,14 @@ class FlaskMerchants:
         Errors are caught individually so one failing handler does not stop
         the others from running.
         """
+        self._emit_signal(
+            webhook_event_received,
+            event=event,
+            event_type=event.event_type,
+            payment_id=event.payment_id,
+            provider=event.provider,
+            state=event.state.value,
+        )
         logger.debug(
             "__init__.py: FlaskMerchants._dispatch_webhook_event called with event_type=%r payment_id=%r",
             event.event_type,
@@ -560,6 +589,17 @@ class FlaskMerchants:
                     event.event_type,
                     event.payment_id,
                 )
+
+    def _signal_sender(self):
+        try:
+            from flask import current_app
+
+            return current_app._get_current_object()
+        except RuntimeError:
+            return self
+
+    def _emit_signal(self, signal, **payload) -> None:
+        signal.send(self._signal_sender(), ext=self, **payload)
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -703,6 +743,18 @@ class FlaskMerchants:
 
         # Always keep in-memory copy for fast look-up
         self._store[merchants_id] = data
+        self._emit_signal(
+            checkout_session_saved,
+            merchants_id=merchants_id,
+            transaction_id=session.session_id,
+            provider=session.provider,
+            amount=str(session.amount),
+            currency=session.currency,
+            state="pending",
+            model_class=model_class,
+            request_payload=req_payload,
+            response_payload=response_raw,
+        )
 
     def get_session(self, payment_id: str) -> dict[str, Any] | None:
         """Return stored data for *payment_id*, or ``None``.
@@ -759,24 +811,64 @@ class FlaskMerchants:
                     if record is not None:
                         break
             if record is not None:
+                old_state = record.state
                 record.state = state
                 self._db.session.commit()
                 mid = record.merchants_id
                 if mid in self._store:
                     self._store[mid]["state"] = state
+                if old_state != state:
+                    self._emit_signal(
+                        payment_state_changed,
+                        payment_id=payment_id,
+                        merchants_id=record.merchants_id,
+                        transaction_id=record.transaction_id,
+                        old_state=old_state,
+                        new_state=state,
+                    )
                 return True
             # Not found in any model - fall back to in-memory
             if payment_id not in self._store:
                 return False
+            old_state = self._store[payment_id]["state"]
             self._store[payment_id]["state"] = state
+            if old_state != state:
+                self._emit_signal(
+                    payment_state_changed,
+                    payment_id=payment_id,
+                    merchants_id=payment_id,
+                    transaction_id=self._store[payment_id].get("transaction_id"),
+                    old_state=old_state,
+                    new_state=state,
+                )
             return True
 
         if payment_id in self._store:
+            old_state = self._store[payment_id]["state"]
             self._store[payment_id]["state"] = state
+            if old_state != state:
+                self._emit_signal(
+                    payment_state_changed,
+                    payment_id=payment_id,
+                    merchants_id=payment_id,
+                    transaction_id=self._store[payment_id].get("transaction_id"),
+                    old_state=old_state,
+                    new_state=state,
+                )
             return True
         for data in self._store.values():
             if data.get("transaction_id") == payment_id:
+                old_state = data["state"]
                 data["state"] = state
+                if old_state != state:
+                    self._emit_signal(
+                        payment_state_changed,
+                        payment_id=payment_id,
+                        merchants_id=data.get("merchants_id"),
+                        transaction_id=data.get("transaction_id"),
+                        old_state=old_state,
+                        new_state=state,
+                    )
                 return True
         return False
 

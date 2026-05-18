@@ -17,6 +17,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from flask_merchants import FlaskMerchants
 from flask_merchants.contrib.sqla import PaymentModelView
 from flask_merchants.models import PaymentMixin
+from flask_merchants.signals import payment_started, payment_state_changed
 
 # ---------------------------------------------------------------------------
 # Fixtures: custom Pagos model backed by in-memory SQLite
@@ -160,6 +161,74 @@ def test_start_payment_success(pagos_app, pagos_db, Pagos):
         refreshed = pagos_db.session.query(Pagos).filter_by(id=record.id).first()
         assert refreshed.transaction_id == record.transaction_id
         assert refreshed.response_payload["redirect_url"] == checkout_url
+
+
+def test_start_payment_emits_signal(pagos_app, pagos_db, Pagos):
+    """start_payment emits payment_started with the app as sender."""
+    with pagos_app.app_context():
+        record = Pagos(
+            merchants_id="m-start-signal",
+            transaction_id="pending-start-signal",
+            provider="dummy",
+            amount=Decimal("10.00"),
+            currency="USD",
+            state="pending",
+        )
+        pagos_db.session.add(record)
+        pagos_db.session.commit()
+
+        captured = []
+
+        def _receiver(sender, **kwargs):
+            captured.append((sender, kwargs))
+
+        payment_started.connect(_receiver, sender=pagos_app, weak=False)
+        try:
+            redirect_url = record.start_payment(
+                success_url="https://example.test/success",
+                cancel_url="https://example.test/cancel",
+            )
+        finally:
+            payment_started.disconnect(_receiver, sender=pagos_app)
+
+        assert len(captured) == 1
+        sender, payload = captured[0]
+        assert sender is pagos_app
+        assert payload["payment"] is record
+        assert payload["redirect_url"] == redirect_url
+
+
+def test_refund_emits_payment_state_changed_signal(pagos_app, pagos_db, Pagos):
+    """refund() emits payment_state_changed with old/new states."""
+    with pagos_app.app_context():
+        record = Pagos(
+            merchants_id="m-refund-signal",
+            transaction_id="dummy_refund_signal",
+            provider="dummy",
+            amount=Decimal("10.00"),
+            currency="USD",
+            state="pending",
+        )
+        pagos_db.session.add(record)
+        pagos_db.session.commit()
+
+        captured = []
+
+        def _receiver(sender, **kwargs):
+            captured.append((sender, kwargs))
+
+        payment_state_changed.connect(_receiver, sender=pagos_app, weak=False)
+        try:
+            record.refund()
+        finally:
+            payment_state_changed.disconnect(_receiver, sender=pagos_app)
+
+        assert len(captured) == 1
+        sender, payload = captured[0]
+        assert sender is pagos_app
+        assert payload["payment_id"] == "m-refund-signal"
+        assert payload["old_state"] == "pending"
+        assert payload["new_state"] == "refunded"
 
 
 def test_start_payment_requires_persisted_record(pagos_app, Pagos):

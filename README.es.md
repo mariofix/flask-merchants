@@ -69,6 +69,35 @@ pip install "flask-merchants[quart]"
 | `MERCHANTS_URL_PREFIX` | `/merchants` | Prefijo de URL para el blueprint |
 | `MERCHANTS_WEBHOOK_SECRET` | `None` | Secreto HMAC-SHA256 para verificación de webhooks |
 
+### Señales (Blinker)
+
+`flask-merchants` emite señales de Blinker para reaccionar a eventos del ciclo
+de vida de la extensión y los pagos usando el patrón estándar de Flask
+(`connect_via(app)`):
+
+```python
+from flask import Flask
+from flask_merchants import FlaskMerchants
+from flask_merchants.signals import payment_state_changed
+
+app = Flask(__name__)
+ext = FlaskMerchants(app)
+
+@payment_state_changed.connect_via(app)
+def on_state_change(sender, *, payment_id, old_state, new_state, **kwargs):
+    print(f"{payment_id}: {old_state} -> {new_state}")
+```
+
+Señales disponibles:
+
+- `merchants_initialized`
+- `checkout_session_saved`
+- `payment_state_changed`
+- `webhook_event_received`
+- `payment_created`
+- `payment_creation_failed`
+- `payment_started`
+
 ### Patrón application-factory
 
 Todos los parámetros de configuración (`db`, `models`, `provider`, `providers`, `admin`)
