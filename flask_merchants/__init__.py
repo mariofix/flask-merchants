@@ -17,6 +17,7 @@ from flask_merchants.signals import (
     payment_creation_failed,
     payment_started,
     payment_state_changed,
+    webhook_event_finished,
     webhook_event_received,
 )
 from flask_merchants.version import __version__
@@ -32,6 +33,7 @@ __all__ = [
     "payment_creation_failed",
     "payment_started",
     "payment_state_changed",
+    "webhook_event_finished",
     "webhook_event_received",
 ]
 
@@ -589,6 +591,14 @@ class FlaskMerchants:
                     event.event_type,
                     event.payment_id,
                 )
+        self._emit_signal(
+            webhook_event_finished,
+            event=event,
+            event_type=event.event_type,
+            payment_id=event.payment_id,
+            provider=event.provider,
+            state=event.state.value,
+        )
 
     def _signal_sender(self):
         try:

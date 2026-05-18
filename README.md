@@ -93,6 +93,7 @@ Available signals:
 - `checkout_session_saved`
 - `payment_state_changed`
 - `webhook_event_received`
+- `webhook_event_finished`
 - `payment_created`
 - `payment_creation_failed`
 - `payment_started`

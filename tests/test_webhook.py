@@ -8,7 +8,7 @@ import pytest
 from flask import Flask
 
 from flask_merchants import FlaskMerchants
-from flask_merchants.signals import webhook_event_received
+from flask_merchants.signals import webhook_event_finished, webhook_event_received
 
 
 def _sign(payload: bytes, secret: str) -> str:
@@ -106,6 +106,38 @@ def test_webhook_emits_webhook_event_received_signal(client, app):
         )
     finally:
         webhook_event_received.disconnect(_receiver, sender=app)
+
+    assert resp.status_code == 200
+    assert len(captured) == 1
+    sender, signal_payload = captured[0]
+    assert sender is app
+    assert signal_payload["event_type"] == "payment.succeeded"
+    assert signal_payload["payment_id"] == "dummy_pay_abc"
+
+
+def test_webhook_emits_webhook_event_finished_signal(client, app):
+    """Webhook emits webhook_event_finished after processing."""
+    captured = []
+
+    def _receiver(sender, **kwargs):
+        captured.append((sender, kwargs))
+
+    webhook_event_finished.connect(_receiver, sender=app, weak=False)
+    try:
+        payload = json.dumps(
+            {
+                "payment_id": "dummy_pay_abc",
+                "event_type": "payment.succeeded",
+                "event_id": "dummy_evt_xyz",
+            }
+        ).encode()
+        resp = client.post(
+            "/merchants/webhook",
+            data=payload,
+            content_type="application/json",
+        )
+    finally:
+        webhook_event_finished.disconnect(_receiver, sender=app)
 
     assert resp.status_code == 200
     assert len(captured) == 1
