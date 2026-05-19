@@ -639,8 +639,8 @@ def test_payment_view_sort_by_state(admin_client, admin_ext):
     r2 = admin_client.post("/merchants/checkout", json={"amount": "2.00", "currency": "USD"})
     sid1 = r1.get_json()["transaction_id"]
     sid2 = r2.get_json()["transaction_id"]
-    admin_ext.update_state(sid1, "succeeded")
-    admin_ext.update_state(sid2, "failed")
+    admin_ext.update_payment_status(sid1, "succeeded")
+    admin_ext.update_payment_status(sid2, "failed")
 
     # Sort by payment_status column (index 4 in column_list)
     resp = admin_client.get("/admin/payments/?sort=4")

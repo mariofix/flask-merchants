@@ -13,7 +13,7 @@ from typing import ClassVar
 from markupsafe import Markup
 
 #: Ordered list of (value, label) pairs for the payment lifecycle state field.
-_STATE_CHOICES = [
+_STATUS_CHOICES = [
     ("pending", "Pending"),
     ("processing", "Processing"),
     ("succeeded", "Succeeded"),
@@ -24,7 +24,7 @@ _STATE_CHOICES = [
 ]
 
 #: Bootstrap badge class per state value (unmapped states fall back to ``"secondary"``).
-_STATE_BADGE_CLASSES = {
+_STATUS_BADGE_CLASSES = {
     "succeeded": "success",
     "failed": "danger",
     "cancelled": "dark",
@@ -33,13 +33,13 @@ _STATE_BADGE_CLASSES = {
 }
 
 
-def _fmt_state(v, c, m, n):
-    """Render a payment state as a Bootstrap badge."""
+def _fmt_payment_status(v, c, m, n):
+    """Render a payment status as a Bootstrap badge."""
     val = v._get_field_value(m, n)
     val = val if val is not None else ""
     return Markup(
         '<span class="badge badge-{cls}">{val}</span>'.format(
-            cls=_STATE_BADGE_CLASSES.get(val, "secondary"),
+            cls=_STATUS_BADGE_CLASSES.get(val, "secondary"),
             val=val,
         )
     )
@@ -103,12 +103,12 @@ class PaymentViewMixin:
 
     #: Custom cell renderers: payment_status as a Bootstrap badge, merchants_id in ``<small>``.
     column_formatters: ClassVar[dict] = {
-        "payment_status": _fmt_state,
+        "payment_status": _fmt_payment_status,
         "merchants_id": _fmt_merchants_id,
     }
 
     #: Choices list exposed to templates / ``scaffold_form`` implementations.
-    payment_status_choices = _STATE_CHOICES
+    payment_status_choices = _STATUS_CHOICES
 
     #: WTForms field choices for the ``payment_status`` form field.
-    form_choices: ClassVar[dict] = {"payment_status": _STATE_CHOICES}
+    form_choices: ClassVar[dict] = {"payment_status": _STATUS_CHOICES}

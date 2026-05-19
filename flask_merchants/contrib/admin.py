@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from flask import flash
 
-from flask_merchants.contrib.base import _STATE_CHOICES, PaymentViewMixin
+from flask_merchants.contrib.base import _STATUS_CHOICES, PaymentViewMixin
 
 try:
     from flask_admin.actions import action
@@ -89,6 +89,86 @@ def _get_auth_info(auth) -> dict[str, str]:
         "header": str(header),
         "masked_value": _mask_secret(raw) if raw else "-",
     }
+
+
+def _extract_provider_base_url(provider) -> str:
+    """Return the base URL from a provider using multiple fallback strategies.
+
+    Different provider implementations store the base URL under different
+    attribute names:
+
+    * ``_base_url`` — used by Khipu, Stripe, PayPal, Dummy.
+    * ``_client.api_url`` — used by Flow (pyflowcl ApiClient).
+    * ``_checkout_url`` — used by GenericProvider.
+    """
+    url = (
+        getattr(provider, "_base_url", None)
+        or getattr(getattr(provider, "_client", None), "api_url", None)
+        or getattr(provider, "_checkout_url", None)
+    )
+    return url or "N/A"
+
+
+def _infer_provider_auth(provider) -> dict[str, str]:
+    """Infer auth info from a provider that does not expose a standard ``_auth`` attribute.
+
+    Handles the auth patterns used by providers that manage credentials
+    internally rather than delegating to an :class:`~merchants.auth.AuthStrategy`:
+
+    * Stripe/PayPal — store a raw key/token and build ``Authorization: Bearer …``
+      headers in ``_headers()`` instead of using an ``AuthStrategy``.
+    * Flow — uses HMAC-SHA256 signing via the pyflowcl ``ApiClient``.
+    * GenericProvider — may supply custom headers via ``_extra_headers``.
+    """
+    # Standard AuthStrategy object (Khipu, anything that sets self._auth)
+    auth = getattr(provider, "_auth", None)
+    if auth is not None:
+        return _get_auth_info(auth)
+
+    # Stripe: self._api_key, no _client wrapper
+    api_key = getattr(provider, "_api_key", None)
+    if api_key and not hasattr(provider, "_client"):
+        return {
+            "type": "ApiKeyAuth",
+            "header": "Authorization",
+            "masked_value": _mask_secret(api_key),
+        }
+
+    # PayPal: self._access_token
+    access_token = getattr(provider, "_access_token", None)
+    if access_token:
+        return {
+            "type": "TokenAuth",
+            "header": "Authorization",
+            "masked_value": _mask_secret(access_token),
+        }
+
+    # Flow: pyflowcl ApiClient — HMAC-SHA256 via api_key + api_secret
+    inner_client = getattr(provider, "_client", None)
+    if inner_client is not None:
+        inner_key = getattr(inner_client, "api_key", None) or getattr(inner_client, "_api_key", None)
+        if inner_key:
+            return {
+                "type": "HmacAuth",
+                "header": "X-Signature",
+                "masked_value": _mask_secret(str(inner_key)),
+            }
+
+    # GenericProvider: extra_headers may carry auth-like headers
+    extra = getattr(provider, "_extra_headers", None)
+    if extra:
+        auth_header = next(
+            (k for k in extra if "auth" in k.lower() or "token" in k.lower() or "key" in k.lower()),
+            next(iter(extra), None),
+        )
+        if auth_header:
+            return {
+                "type": "CustomHeader",
+                "header": auth_header,
+                "masked_value": _mask_secret(str(extra[auth_header])),
+            }
+
+    return {"type": "None", "header": "-", "masked_value": "-"}
 
 
 class _PaymentRecord:
@@ -169,7 +249,7 @@ class PaymentView(PaymentViewMixin, BaseModelView):
         from wtforms import Form as WTForm
         from wtforms import SelectField
 
-        choices = _STATE_CHOICES
+        choices = _STATUS_CHOICES
 
         class StateForm(WTForm):
             payment_status = SelectField(
@@ -238,7 +318,7 @@ class PaymentView(PaymentViewMixin, BaseModelView):
         """Update payment status from the modal edit form."""
         payment_id = self.get_pk_value(model)
         new_status = form.payment_status.data
-        if self._ext.update_state(payment_id, new_status):
+        if self._ext.update_payment_status(payment_id, new_status):
             flash(f"Payment {payment_id} updated to '{new_status}'.", "success")
             return True
         flash(f"Payment {payment_id} not found.", "danger")
@@ -414,9 +494,8 @@ class ProvidersView(BaseModelView):
         for key in provider_keys:
             try:
                 client = self._ext.get_client(key)
-                base_url = getattr(client._provider, "_base_url", "") or getattr(client, "_base_url", "N/A") or "N/A"
-                auth_src = client._auth or getattr(client._provider, "_auth", None)
-                auth_info = _get_auth_info(auth_src)
+                base_url = _extract_provider_base_url(client._provider)
+                auth_info = _infer_provider_auth(client._provider)
                 transport = type(client._transport).__name__
             except Exception:
                 base_url = "N/A"

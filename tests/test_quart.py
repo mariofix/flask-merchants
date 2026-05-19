@@ -118,12 +118,12 @@ async def test_quart_payment_status(quart_app, quart_ext):
         status_resp = await client.get(f"/merchants/status/{session_id}")
         assert status_resp.status_code == 200
         status_data = await status_resp.get_json()
-        assert "state" in status_data
+        assert "payment_status" in status_data
         assert status_data["payment_id"] == session_id
 
     # Store should be updated
     stored = quart_ext.get_session(session_id)
-    assert stored["payment_status"] == status_data["state"]
+    assert stored["payment_status"] == status_data["payment_status"]
 
 
 # ---------------------------------------------------------------------------

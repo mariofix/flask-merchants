@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from flask_merchants.contrib.base import _STATE_CHOICES, _fmt_state, PaymentViewMixin
+from flask_merchants.contrib.base import _STATUS_CHOICES, _fmt_payment_status, PaymentViewMixin
 
 try:
     from flask_admin.actions import action
@@ -98,7 +98,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
     }
     column_formatters: ClassVar[dict] = {
         **PaymentViewMixin.column_formatters,
-        "payment_status": _fmt_state,
+        "payment_status": _fmt_payment_status,
     }
     column_searchable_list: ClassVar[list] = ["merchants_id", "transaction_id", "provider"]
     column_filters: ClassVar[list] = ["payment_status", "provider", "currency"]
@@ -125,7 +125,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         "currency",
         "payment_status",
     ]
-    form_choices: ClassVar[dict] = {"payment_status": _STATE_CHOICES}
+    form_choices: ClassVar[dict] = {"payment_status": _STATUS_CHOICES}
 
     # ------------------------------------------------------------------
     # Init
@@ -170,12 +170,12 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         and surfaces a clean error in the admin UI rather than an unhandled
         exception.
         """
-        valid_states = {s for s, _ in _STATE_CHOICES}
-        if model.payment_status not in valid_states:
+        valid_statuses = {s for s, _ in _STATUS_CHOICES}
+        if model.payment_status not in valid_statuses:
             from wtforms import ValidationError
 
             raise ValidationError(
-                f"Invalid state {model.payment_status!r}. Choose one of: {', '.join(sorted(valid_states))}."
+                f"Invalid payment_status {model.payment_status!r}. Choose one of: {', '.join(sorted(valid_statuses))}."
             )
 
     def after_model_change(self, form, model, is_created: bool) -> None:
@@ -185,7 +185,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         both storage backends stay consistent.
         """
         if self._ext is not None:
-            self._ext.update_state(model.merchants_id, model.payment_status)
+            self._ext.update_payment_status(model.merchants_id, model.payment_status)
 
     # ------------------------------------------------------------------
     # Bulk actions
@@ -203,7 +203,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
                 if record is not None:
                     record.payment_status = "refunded"
                     if self._ext is not None:
-                        self._ext.update_state(record.merchants_id, "refunded")
+                        self._ext.update_payment_status(record.merchants_id, "refunded")
                     count += 1
             self.session.commit()
             flash(f"{count} payment(s) marked as refunded.", "success")
@@ -223,7 +223,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
                 if record is not None:
                     record.payment_status = "cancelled"
                     if self._ext is not None:
-                        self._ext.update_state(record.merchants_id, "cancelled")
+                        self._ext.update_payment_status(record.merchants_id, "cancelled")
                     count += 1
             self.session.commit()
             flash(f"{count} payment(s) cancelled.", "success")

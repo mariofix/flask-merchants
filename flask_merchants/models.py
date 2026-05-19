@@ -58,7 +58,7 @@ from flask_merchants.signals import (
     payment_created,
     payment_creation_failed,
     payment_started,
-    payment_state_changed,
+    payment_status_changed,
 )
 
 logger = logging.getLogger(__name__)
@@ -155,8 +155,8 @@ class PaymentMixin:
         DateTime(timezone=True), default=datetime.now(), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    #: Valid lifecycle state values accepted by the model.
-    VALID_STATES: frozenset[str] = frozenset(
+    #: Valid lifecycle status values accepted by the model.
+    VALID_STATUSES: frozenset[str] = frozenset(
         ("pending", "processing", "succeeded", "failed", "cancelled", "refunded", "unknown")
     )
 
@@ -170,11 +170,11 @@ class PaymentMixin:
 
         Raises:
             ValueError: If *value* is not one of the recognised lifecycle
-                states defined in :attr:`VALID_STATES`.
+                states defined in :attr:`VALID_STATUSES`.
         """
-        if value not in self.VALID_STATES:
+        if value not in self.VALID_STATUSES:
             raise ValueError(
-                f"Invalid payment state {value!r}. Allowed values: {', '.join(sorted(self.VALID_STATES))}."
+                f"Invalid payment status {value!r}. Allowed values: {', '.join(sorted(self.VALID_STATUSES))}."
             )
         return value
 
@@ -385,7 +385,7 @@ class PaymentMixin:
         )
 
         logger.info(
-            "Payment created: merchants_id=%s transaction_id=%s provider=%s amount=%s state=%s",
+            "Payment created: merchants_id=%s transaction_id=%s provider=%s amount=%s payment_status=%s",
             record.merchants_id,
             record.transaction_id,
             record.provider,
@@ -410,7 +410,7 @@ class PaymentMixin:
         ext._db.session.commit()
         if old_status != self.payment_status:
             ext._emit_signal(
-                payment_state_changed,
+                payment_status_changed,
                 payment=self,
                 payment_id=self.merchants_id,
                 merchants_id=self.merchants_id,
@@ -433,7 +433,7 @@ class PaymentMixin:
         ext._db.session.commit()
         if old_status != self.payment_status:
             ext._emit_signal(
-                payment_state_changed,
+                payment_status_changed,
                 payment=self,
                 payment_id=self.merchants_id,
                 merchants_id=self.merchants_id,
@@ -466,7 +466,7 @@ class PaymentMixin:
         ext._db.session.commit()
         if old_status != self.payment_status:
             ext._emit_signal(
-                payment_state_changed,
+                payment_status_changed,
                 payment=self,
                 payment_id=self.merchants_id,
                 merchants_id=self.merchants_id,

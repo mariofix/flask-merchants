@@ -17,7 +17,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from flask_merchants import FlaskMerchants
 from flask_merchants.contrib.sqla import PaymentModelView
 from flask_merchants.models import PaymentMixin
-from flask_merchants.signals import payment_started, payment_state_changed
+from flask_merchants.signals import payment_started, payment_status_changed
 
 # ---------------------------------------------------------------------------
 # Fixtures: custom Pagos model backed by in-memory SQLite
@@ -198,8 +198,8 @@ def test_start_payment_emits_signal(pagos_app, pagos_db, Pagos):
         assert payload["redirect_url"] == redirect_url
 
 
-def test_refund_emits_payment_state_changed_signal(pagos_app, pagos_db, Pagos):
-    """refund() emits payment_state_changed with old/new states."""
+def test_refund_emits_payment_status_changed_signal(pagos_app, pagos_db, Pagos):
+    """refund() emits payment_status_changed with old/new states."""
     with pagos_app.app_context():
         record = Pagos(
             merchants_id="m-refund-signal",
@@ -217,11 +217,11 @@ def test_refund_emits_payment_state_changed_signal(pagos_app, pagos_db, Pagos):
         def _receiver(sender, **kwargs):
             captured.append((sender, kwargs))
 
-        payment_state_changed.connect(_receiver, sender=pagos_app, weak=False)
+        payment_status_changed.connect(_receiver, sender=pagos_app, weak=False)
         try:
             record.refund()
         finally:
-            payment_state_changed.disconnect(_receiver, sender=pagos_app)
+            payment_status_changed.disconnect(_receiver, sender=pagos_app)
 
         assert len(captured) == 1
         sender, payload = captured[0]
@@ -406,7 +406,7 @@ def test_get_session_from_custom_model(pagos_client, pagos_app, pagos_ext):
 
 
 def test_update_state_on_custom_model(pagos_client, pagos_app, pagos_db, pagos_ext, Pagos):
-    """update_state writes to the custom model row."""
+    """update_payment_status writes to the custom model row."""
     with pagos_app.app_context():
         resp = pagos_client.post(
             "/merchants/checkout",
@@ -414,7 +414,7 @@ def test_update_state_on_custom_model(pagos_client, pagos_app, pagos_db, pagos_e
         )
         session_id = resp.get_json()["transaction_id"]
 
-        pagos_ext.update_state(session_id, "succeeded")
+        pagos_ext.update_payment_status(session_id, "succeeded")
 
         record = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         assert record.payment_status == "succeeded"

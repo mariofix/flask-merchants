@@ -3,7 +3,7 @@
 Verifies that one ext instance can manage two models (Pagos + Paiements):
 - save_session routes to a specific model via model_class=
 - get_session searches all models
-- update_state searches all models
+- update_payment_status searches all models
 - all_sessions combines all models; model_class= filters to one
 """
 
@@ -231,12 +231,12 @@ def test_get_session_finds_paiements_record(multi_app, multi_db, multi_ext, Paie
 
 
 # ---------------------------------------------------------------------------
-# update_state searches all models
+# update_payment_status searches all models
 # ---------------------------------------------------------------------------
 
 
 def test_update_state_on_paiements(multi_app, multi_db, multi_ext, Paiements):
-    """update_state finds and updates a record in the Paiements table."""
+    """update_payment_status finds and updates a record in the Paiements table."""
     with multi_app.app_context():
         session = multi_ext.client.payments.create_checkout(
             amount="30.00",
@@ -246,7 +246,7 @@ def test_update_state_on_paiements(multi_app, multi_db, multi_ext, Paiements):
         )
         multi_ext.save_session(session, model_class=Paiements)
 
-        result = multi_ext.update_state(session.session_id, "succeeded")
+        result = multi_ext.update_payment_status(session.session_id, "succeeded")
         assert result is True
 
         record = multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()

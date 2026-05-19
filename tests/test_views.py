@@ -130,7 +130,7 @@ def test_payment_status_returns_state(client, ext):
     data = resp.get_json()
     assert data["payment_id"] == session_id
     assert data["provider"] == "dummy"
-    assert "state" in data
+    assert "payment_status" in data
     assert "is_final" in data
     assert "is_success" in data
 

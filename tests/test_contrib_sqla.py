@@ -170,7 +170,7 @@ def test_save_session_stores_response_payload(sqla_client, sqla_app, sqla_db, Pa
 
 
 def test_update_state_in_db(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
-    """update_state writes the new state to the database row."""
+    """update_payment_status writes the new payment_status to the database row."""
     with sqla_app.app_context():
         resp = sqla_client.post(
             "/merchants/checkout",
@@ -178,7 +178,7 @@ def test_update_state_in_db(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
         )
         session_id = resp.get_json()["transaction_id"]
 
-        sqla_ext.update_state(session_id, "succeeded")
+        sqla_ext.update_payment_status(session_id, "succeeded")
 
         record = sqla_db.session.query(Payment).filter_by(transaction_id=session_id).first()
         assert record.payment_status == "succeeded"
@@ -277,7 +277,7 @@ def test_validates_state_accepts_valid(Payment):
     """PaymentMixin @validates accepts all recognised lifecycle states."""
     from flask_merchants.models import PaymentMixin
 
-    for state in PaymentMixin.VALID_STATES:
+    for state in PaymentMixin.VALID_STATUSES:
         p = Payment(
             merchants_id=f"v-{state}",
             transaction_id=f"t-v-{state}",

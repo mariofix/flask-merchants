@@ -78,12 +78,12 @@ de vida de la extensión y los pagos usando el patrón estándar de Flask
 ```python
 from flask import Flask
 from flask_merchants import FlaskMerchants
-from flask_merchants.signals import payment_state_changed
+from flask_merchants.signals import payment_status_changed
 
 app = Flask(__name__)
 ext = FlaskMerchants(app)
 
-@payment_state_changed.connect_via(app)
+@payment_status_changed.connect_via(app)
 def on_state_change(sender, *, payment_id, old_status, new_status, **kwargs):
     print(f"{payment_id}: {old_status} -> {new_status}")
 ```
@@ -92,7 +92,7 @@ Señales disponibles:
 
 - `merchants_initialized`
 - `checkout_session_saved`
-- `payment_state_changed`
+- `payment_status_changed`
 - `webhook_event_received`
 - `webhook_event_finished`
 - `payment_created`
@@ -308,7 +308,7 @@ ext = FlaskMerchants(app, db=db, models=[Pagos, Paiements])
 session = ext.client.payments.create_checkout(...)
 ext.save_session(session, model_class=Paiements)
 
-# get_session / update_state / refund_session / cancel_session buscan en
+# get_session / update_payment_status / refund_session / cancel_session buscan en
 # todos los modelos registrados automáticamente.
 
 # all_sessions() devuelve todos los registros de todos los modelos combinados.

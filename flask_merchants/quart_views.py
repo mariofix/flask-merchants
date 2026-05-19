@@ -151,12 +151,12 @@ def create_async_blueprint(ext: FlaskMerchants):
         except merchants.UserError as exc_:
             return jsonify({"error": str(exc_)}), 400
 
-        ext.update_state(payment_id, status.state.value)
+        ext.update_payment_status(payment_id, status.state.value)
 
         return jsonify(
             {
                 "payment_id": status.payment_id,
-                "state": status.state.value,
+                "payment_status": status.state.value,
                 "provider": status.provider,
                 "is_final": status.is_final,
                 "is_success": status.is_success,
@@ -188,7 +188,7 @@ def create_async_blueprint(ext: FlaskMerchants):
         except Exception:
             return jsonify({"error": "malformed payload"}), 400
 
-        ext.update_state(event.payment_id, event.state.value)
+        ext.update_payment_status(event.payment_id, event.state.value)
         ext._dispatch_webhook_event(event)
 
         return jsonify(
@@ -197,7 +197,7 @@ def create_async_blueprint(ext: FlaskMerchants):
                 "event_id": event.event_id,
                 "event_type": event.event_type,
                 "payment_id": event.payment_id,
-                "state": event.state.value,
+                "payment_status": event.state.value,
             }
         )
 
@@ -229,7 +229,7 @@ def create_async_blueprint(ext: FlaskMerchants):
             return jsonify({"error": "malformed payload"}), 400
 
         if event.payment_id:
-            ext.update_state(event.payment_id, event.state.value)
+            ext.update_payment_status(event.payment_id, event.state.value)
 
         ext._dispatch_webhook_event(event)
 
@@ -239,7 +239,7 @@ def create_async_blueprint(ext: FlaskMerchants):
                 "event_id": event.event_id,
                 "event_type": event.event_type,
                 "payment_id": event.payment_id,
-                "state": event.state.value,
+                "payment_status": event.state.value,
             }
         )
 

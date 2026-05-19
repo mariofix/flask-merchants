@@ -16,7 +16,7 @@ from flask_merchants.signals import (
     payment_created,
     payment_creation_failed,
     payment_started,
-    payment_state_changed,
+    payment_status_changed,
     webhook_event_finished,
     webhook_event_received,
 )
@@ -32,7 +32,7 @@ __all__ = [
     "payment_created",
     "payment_creation_failed",
     "payment_started",
-    "payment_state_changed",
+    "payment_status_changed",
     "webhook_event_finished",
     "webhook_event_received",
 ]
@@ -133,7 +133,7 @@ class FlaskMerchants:
         ext.save_session(session, model_class=Pagos)
         ext.save_session(session2, model_class=Paiements)
 
-        # get_session / update_state search across all models automatically.
+        # get_session / update_payment_status search across all models automatically.
         # all_sessions() returns records from all models combined.
         # all_sessions(model_class=Pagos) returns only Pagos records.
 
@@ -574,7 +574,7 @@ class FlaskMerchants:
             event_type=event.event_type,
             payment_id=event.payment_id,
             provider=event.provider,
-            state=event.state.value,
+            payment_status=event.state.value,
         )
         logger.debug(
             "__init__.py: FlaskMerchants._dispatch_webhook_event called with event_type=%r payment_id=%r",
@@ -597,7 +597,7 @@ class FlaskMerchants:
             event_type=event.event_type,
             payment_id=event.payment_id,
             provider=event.provider,
-            state=event.state.value,
+            payment_status=event.state.value,
         )
 
     def _signal_sender(self):
@@ -791,8 +791,8 @@ class FlaskMerchants:
                 return data
         return None
 
-    def update_state(self, payment_id: str, state: str) -> bool:
-        """Update the stored state for *payment_id*. Returns ``True`` on success.
+    def update_payment_status(self, payment_id: str, payment_status: str) -> bool:
+        """Update the stored payment status for *payment_id*. Returns ``True`` on success.
 
         Searches by ``merchants_id`` first, then by ``transaction_id``.
 
@@ -804,9 +804,9 @@ class FlaskMerchants:
         registration order; the first match is updated.
         """
         logger.debug(
-            "__init__.py: FlaskMerchants.update_state called with payment_id=%s state=%r",
+            "__init__.py: FlaskMerchants.update_payment_status called with payment_id=%s payment_status=%r",
             payment_id,
-            state,
+            payment_status,
         )
         if self._db is not None:
             record = None
@@ -822,62 +822,62 @@ class FlaskMerchants:
                         break
             if record is not None:
                 old_status = record.payment_status
-                record.payment_status = state
+                record.payment_status = payment_status
                 self._db.session.commit()
                 mid = record.merchants_id
                 if mid in self._store:
-                    self._store[mid]["payment_status"] = state
-                if old_status != state:
+                    self._store[mid]["payment_status"] = payment_status
+                if old_status != payment_status:
                     self._emit_signal(
-                        payment_state_changed,
+                        payment_status_changed,
                         payment_id=payment_id,
                         merchants_id=record.merchants_id,
                         transaction_id=record.transaction_id,
                         old_status=old_status,
-                        new_status=state,
+                        new_status=payment_status,
                     )
                 return True
             # Not found in any model - fall back to in-memory
             if payment_id not in self._store:
                 return False
             old_status = self._store[payment_id]["payment_status"]
-            self._store[payment_id]["payment_status"] = state
-            if old_status != state:
+            self._store[payment_id]["payment_status"] = payment_status
+            if old_status != payment_status:
                 self._emit_signal(
-                    payment_state_changed,
+                    payment_status_changed,
                     payment_id=payment_id,
                     merchants_id=payment_id,
                     transaction_id=self._store[payment_id].get("transaction_id"),
                     old_status=old_status,
-                    new_status=state,
+                    new_status=payment_status,
                 )
             return True
 
         if payment_id in self._store:
             old_status = self._store[payment_id]["payment_status"]
-            self._store[payment_id]["payment_status"] = state
-            if old_status != state:
+            self._store[payment_id]["payment_status"] = payment_status
+            if old_status != payment_status:
                 self._emit_signal(
-                    payment_state_changed,
+                    payment_status_changed,
                     payment_id=payment_id,
                     merchants_id=payment_id,
                     transaction_id=self._store[payment_id].get("transaction_id"),
                     old_status=old_status,
-                    new_status=state,
+                    new_status=payment_status,
                 )
             return True
         for data in self._store.values():
             if data.get("transaction_id") == payment_id:
                 old_status = data["payment_status"]
-                data["payment_status"] = state
-                if old_status != state:
+                data["payment_status"] = payment_status
+                if old_status != payment_status:
                     self._emit_signal(
-                        payment_state_changed,
+                        payment_status_changed,
                         payment_id=payment_id,
                         merchants_id=data.get("merchants_id"),
                         transaction_id=data.get("transaction_id"),
                         old_status=old_status,
-                        new_status=state,
+                        new_status=payment_status,
                     )
                 return True
         return False
@@ -887,14 +887,14 @@ class FlaskMerchants:
 
         .. deprecated:: Prefer ``payment.refund()`` on the payment instance.
         """
-        return self.update_state(payment_id, "refunded")
+        return self.update_payment_status(payment_id, "refunded")
 
     def cancel_session(self, payment_id: str) -> bool:
         """Mark *payment_id* as cancelled. Returns ``True`` on success.
 
         .. deprecated:: Prefer ``payment.cancel()`` on the payment instance.
         """
-        return self.update_state(payment_id, "cancelled")
+        return self.update_payment_status(payment_id, "cancelled")
 
     def sync_from_provider(self, payment_id: str) -> dict[str, Any] | None:
         """Fetch live status from the provider and update the stored state.
@@ -912,7 +912,7 @@ class FlaskMerchants:
             status = self.client.payments.get(payment_id)
         except Exception:
             return None
-        self.update_state(payment_id, status.state.value)
+        self.update_payment_status(payment_id, status.state.value)
         stored["payment_status"] = status.state.value
         return stored
 
