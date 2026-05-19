@@ -31,6 +31,7 @@ Example::
 
 from __future__ import annotations
 
+from importlib import import_module
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from flask_merchants.contrib.base import _STATUS_CHOICES, _fmt_payment_status, PaymentViewMixin
@@ -49,6 +50,21 @@ if TYPE_CHECKING:
     from flask_merchants import FlaskMerchants
 
 
+def _load_widget_from_path(path: str) -> Any:
+    """Import and return a WTForms widget from a dotted path.
+
+    Examples:
+        ``wtforms.widgets.TextArea`` -> ``TextArea()``
+        ``myapp.widgets.json_widget`` -> object returned by that attribute
+    """
+    module_path, sep, attr_name = path.rpartition(".")
+    if not sep or not module_path or not attr_name:
+        raise ValueError(f"Invalid widget path {path!r}. Expected dotted path like 'package.module.WidgetClass'.")
+    module = import_module(module_path)
+    attr = getattr(module, attr_name)
+    return attr() if isinstance(attr, type) else attr
+
+
 class PaymentModelView(PaymentViewMixin, ModelView):
     """Flask-Admin view for the :class:`~flask_merchants.models.Payment` model.
 
@@ -65,6 +81,10 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         session: A SQLAlchemy scoped session (e.g. ``db.session``).
         ext: Optional :class:`~flask_merchants.FlaskMerchants` instance.
             Required only for the *Sync from Provider* action.
+        payment_json_fields: Optional list/tuple of field names that should use
+            the JSON widget loaded from *payment_json_widget*.
+        payment_json_widget: Optional dotted import path to a widget class/object
+            (for example ``"wtforms.widgets.TextArea"``).
         name: Display name shown in the admin navigation bar.
         endpoint: Internal Flask endpoint prefix (must be unique).
         category: Optional admin category/group name.
@@ -137,12 +157,16 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         session,
         *,
         ext: FlaskMerchants | None = None,
+        payment_json_fields: tuple[str, ...] | list[str] | None = None,
+        payment_json_widget: str = "",
         can_create: bool | None = None,
         can_edit: bool | None = None,
         can_delete: bool | None = None,
         **kwargs: Any,
     ) -> None:
         self._ext = ext
+        self._payment_json_fields = tuple(str(f) for f in (payment_json_fields or ()))
+        self._payment_json_widget = _load_widget_from_path(payment_json_widget) if payment_json_widget else None
         # Allow per-instance overrides of the class-level capability flags so
         # callers can restrict the UI without having to subclass:
         #
@@ -154,6 +178,18 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         if can_delete is not None:
             self.can_delete = can_delete
         super().__init__(model, session, **kwargs)
+
+    def scaffold_form(self):
+        """Build the WTForms class and apply configured JSON widget overrides."""
+        form_class = super().scaffold_form()
+        if not self._payment_json_fields or self._payment_json_widget is None:
+            return form_class
+        for field_name in self._payment_json_fields:
+            unbound_field = getattr(form_class, field_name, None)
+            if unbound_field is None:
+                continue
+            unbound_field.kwargs["widget"] = self._payment_json_widget
+        return form_class
 
     # ------------------------------------------------------------------
     # on_model_change hook

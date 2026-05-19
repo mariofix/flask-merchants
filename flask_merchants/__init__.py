@@ -298,6 +298,8 @@ class FlaskMerchants:
         app.config.setdefault("MERCHANTS_URL_PREFIX", "/merchants")
         app.config.setdefault("MERCHANTS_PAYMENT_VIEW_NAME", "Payments")
         app.config.setdefault("MERCHANTS_PROVIDER_VIEW_NAME", "Providers")
+        app.config.setdefault("MERCHANTS_PAYMENT_JSON_FIELDS", ())
+        app.config.setdefault("MERCHANTS_PAYMENT_JSON_WIDGET", "")
         app.config.setdefault("MERCHANTS_WEBHOOK_BASE_URL", "")
 
         self._webhook_base_url = app.config["MERCHANTS_WEBHOOK_BASE_URL"].rstrip("/")
@@ -337,6 +339,8 @@ class FlaskMerchants:
                 self,
                 payment_name=app.config["MERCHANTS_PAYMENT_VIEW_NAME"],
                 provider_name=app.config["MERCHANTS_PROVIDER_VIEW_NAME"],
+                payment_json_fields=app.config["MERCHANTS_PAYMENT_JSON_FIELDS"],
+                payment_json_widget=app.config["MERCHANTS_PAYMENT_JSON_WIDGET"],
             )
         merchants_initialized.send(app, ext=self, providers=self.list_providers(), url_prefix=url_prefix)
 

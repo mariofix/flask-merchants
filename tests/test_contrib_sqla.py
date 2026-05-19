@@ -461,3 +461,65 @@ def test_constructor_kwargs_do_not_affect_class(sqla_app, sqla_db, Payment):
         # Class defaults must be untouched.
         assert PaymentModelView.can_create is True
         assert PaymentModelView.can_edit is True
+
+
+def test_payment_json_widget_applies_to_configured_fields(sqla_app, sqla_db, Payment):
+    """payment_json_fields/payment_json_widget apply custom widgets to matching fields."""
+    from wtforms.widgets import TextArea
+
+    with sqla_app.app_context():
+        view = PaymentModelView(
+            Payment,
+            sqla_db.session,
+            name="Widgeted",
+            endpoint="widgeted",
+            payment_json_fields=("request_payload", "does_not_exist"),
+            payment_json_widget="wtforms.widgets.TextArea",
+        )
+        form_class = view.scaffold_form()
+        assert isinstance(form_class.request_payload.kwargs["widget"], TextArea)
+
+
+def test_payment_json_widget_invalid_path_raises(sqla_app, sqla_db, Payment):
+    """Invalid payment_json_widget import paths raise a clear error."""
+    with sqla_app.app_context():
+        with pytest.raises((ValueError, ImportError, AttributeError)):
+            PaymentModelView(
+                Payment,
+                sqla_db.session,
+                name="WidgetedErr",
+                endpoint="widgeted_err",
+                payment_json_fields=("request_payload",),
+                payment_json_widget="not-a-valid-path",
+            )
+
+
+def test_init_app_json_widget_config_applies_to_auto_registered_view():
+    """init_app forwards JSON widget config to auto-registered PaymentModelView."""
+    from wtforms.widgets import TextArea
+
+    class Base(DeclarativeBase):
+        pass
+
+    class Payment(PaymentMixin, Base):
+        __tablename__ = "payments"
+        id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SECRET_KEY"] = "test-secret"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    app.config["MERCHANTS_PAYMENT_JSON_FIELDS"] = ("request_payload", "response_payload")
+    app.config["MERCHANTS_PAYMENT_JSON_WIDGET"] = "wtforms.widgets.TextArea"
+
+    Babel(app)
+    db = SQLAlchemy(model_class=Base)
+    db.init_app(app)
+    admin_inst = Admin(app, name="Test Admin")
+
+    FlaskMerchants(app, db=db, models=[Payment], admin=admin_inst)
+
+    payment_view = next(v for v in admin_inst._views if getattr(v, "endpoint", "") == "merchants_payments")
+    form_class = payment_view.scaffold_form()
+    assert isinstance(form_class.request_payload.kwargs["widget"], TextArea)
+    assert isinstance(form_class.response_payload.kwargs["widget"], TextArea)

@@ -588,7 +588,7 @@ def test_register_admin_views_custom_names():
 
 
 def test_default_config_values_set_on_init_app():
-    """init_app sets MERCHANTS_PAYMENT_VIEW_NAME and MERCHANTS_PROVIDER_VIEW_NAME defaults."""
+    """init_app sets default MERCHANTS_* admin config values."""
     app = Flask(__name__)
     app.config["TESTING"] = True
     app.config["SECRET_KEY"] = "s"
@@ -596,6 +596,8 @@ def test_default_config_values_set_on_init_app():
 
     assert app.config["MERCHANTS_PAYMENT_VIEW_NAME"] == "Payments"
     assert app.config["MERCHANTS_PROVIDER_VIEW_NAME"] == "Providers"
+    assert app.config["MERCHANTS_PAYMENT_JSON_FIELDS"] == ()
+    assert app.config["MERCHANTS_PAYMENT_JSON_WIDGET"] == ""
 
 
 # ---------------------------------------------------------------------------

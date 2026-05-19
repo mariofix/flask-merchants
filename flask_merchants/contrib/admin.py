@@ -562,7 +562,13 @@ class ProvidersView(BaseModelView):
 
 
 def register_admin_views(
-    admin, ext: FlaskMerchants, *, payment_name: str = "Payments", provider_name: str = "Providers"
+    admin,
+    ext: FlaskMerchants,
+    *,
+    payment_name: str = "Payments",
+    provider_name: str = "Providers",
+    payment_json_fields: tuple[str, ...] | list[str] = (),
+    payment_json_widget: str = "",
 ) -> None:
     """Register the standard Merchants admin views into *admin*.
 
@@ -596,6 +602,10 @@ def register_admin_views(
         ext: An initialised :class:`~flask_merchants.FlaskMerchants` instance.
         payment_name: Display name for the Payments menu item.
         provider_name: Display name for the Providers menu item.
+        payment_json_fields: Payment model fields that should render using
+            the widget configured in *payment_json_widget*.
+        payment_json_widget: Dotted import path to the widget class/object
+            used for *payment_json_fields*.
     """
     if ext._db is not None:
         from flask_merchants.contrib.sqla import PaymentModelView
@@ -607,6 +617,8 @@ def register_admin_views(
                     model_cls,
                     ext._db.session,
                     ext=ext,
+                    payment_json_fields=payment_json_fields,
+                    payment_json_widget=payment_json_widget,
                     name=payment_name,
                     endpoint=endpoint,
                     category="Merchants",

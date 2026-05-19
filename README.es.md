@@ -155,6 +155,17 @@ ext = FlaskMerchants()
 ext.init_app(app, admin=admin)
 ```
 
+Si quieres que ciertos campos de pago usen un widget JSON personalizado en la
+vista SQLAlchemy auto-registrada, configura:
+
+```python
+app.config["MERCHANTS_PAYMENT_JSON_FIELDS"] = ("request_payload", "response_payload")
+app.config["MERCHANTS_PAYMENT_JSON_WIDGET"] = "some_library.widget.jsonwidget"
+```
+
+El valor del widget debe ser una ruta de importación con notación de puntos
+que apunte a una clase/objeto de widget.
+
 Se registran dos vistas automáticamente:
 
 | Vista | URL | Descripción |
