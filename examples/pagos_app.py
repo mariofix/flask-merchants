@@ -46,7 +46,7 @@ class Pagos(PaymentMixin, db.Model):
     """Application-level payment model.
 
     Using PaymentMixin gives us all the columns and helpers that
-    flask-merchants needs (session_id, state, to_dict, …).  We can also
+    flask-merchants needs (session_id, payment_status, to_dict, …).  We can also
     add our own application-specific columns here.
     """
 

@@ -250,7 +250,7 @@ def test_update_state_on_paiements(multi_app, multi_db, multi_ext, Paiements):
         assert result is True
 
         record = multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
-        assert record.state == "succeeded"
+        assert record.payment_status == "succeeded"
 
 
 # ---------------------------------------------------------------------------
@@ -351,4 +351,4 @@ def test_admin_refund_paiements(multi_client, multi_app, multi_db, multi_ext, Pa
 
         multi_db.session.expire_all()
         refreshed = multi_db.session.query(Paiements).filter_by(transaction_id=session.session_id).first()
-        assert refreshed.state == "refunded"
+        assert refreshed.payment_status == "refunded"

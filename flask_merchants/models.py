@@ -31,7 +31,7 @@ Payment creation via the ``create()`` classmethod::
         email="user@example.com",
     )
     # payment is already persisted with request/response payloads populated.
-    # On provider failure, a record with state="failed" is stored.
+    # On provider failure, a record with payment_status="failed" is stored.
 
 Payment initiation on an already-persisted record::
 
@@ -64,6 +64,14 @@ from flask_merchants.signals import (
 logger = logging.getLogger(__name__)
 
 
+def _extract_initial_status(session: Any) -> str:
+    """Return the initial payment status from a checkout session-like object."""
+    initial_status = getattr(session, "initial_status", None)
+    if initial_status is None:
+        initial_status = session.initial_state
+    return initial_status.value
+
+
 class PaymentMixin:
     """SQLAlchemy declarative mixin that adds all payment fields.
 
@@ -92,6 +100,10 @@ class PaymentMixin:
         session/payment ID.  For internal providers it equals
         ``merchants_id``.
 
+    ``payment_status``
+        Current lifecycle status of the payment (e.g. ``pending``,
+        ``succeeded``).
+
     ``extra_args``
         Provider-specific kwargs unpacked into ``create_checkout()``.
         Keys are merged at the top level of ``request_payload`` and
@@ -113,7 +125,7 @@ class PaymentMixin:
     Use the :meth:`create` classmethod to create a new payment.  It calls
     the provider, populates all fields (including request/response
     payloads), and persists the record in a single step.  Even if the
-    provider call fails, a record with ``state="failed"`` is created so
+    provider call fails, a record with ``payment_status="failed"`` is created so
     no payment attempt goes untracked.
 
     After creation, use :meth:`refund`, :meth:`cancel`, or
@@ -128,7 +140,7 @@ class PaymentMixin:
     provider: Mapped[str] = mapped_column(String(64), index=True)
     amount: Mapped[Decimal | None] = mapped_column(Numeric(19, 4), nullable=True)
     currency: Mapped[str] = mapped_column(String(3))
-    state: Mapped[str] = mapped_column(String(32), default="pending", index=True)
+    payment_status: Mapped[str] = mapped_column(String(32), default="pending", index=True)
     email: Mapped[str | None] = mapped_column(String(255), index=True, nullable=True)
     extra_args: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
     request_payload: Mapped[dict] = mapped_column(JSON, default=dict, server_default=text("'{}'"))
@@ -152,9 +164,9 @@ class PaymentMixin:
     # Validators
     # ------------------------------------------------------------------
 
-    @validates("state")
-    def validate_state(self, key: str, value: str) -> str:
-        """Reject unknown state values at the SQLAlchemy attribute level.
+    @validates("payment_status")
+    def validate_payment_status(self, key: str, value: str) -> str:
+        """Reject unknown payment-status values at the SQLAlchemy attribute level.
 
         Raises:
             ValueError: If *value* is not one of the recognised lifecycle
@@ -241,7 +253,7 @@ class PaymentMixin:
            response, including ``request_payload`` and ``response_payload``.
         3. Persists the record to the database and commits.
 
-        If the provider call fails, a record with ``state="failed"`` is still
+        If the provider call fails, a record with ``payment_status="failed"`` is still
         created so no payment attempt goes untracked.
 
         Args:
@@ -320,13 +332,14 @@ class PaymentMixin:
             if session.redirect_url:
                 response_raw.setdefault("redirect_url", session.redirect_url)
 
+            initial_status = _extract_initial_status(session)
             record = cls(
                 merchants_id=local_merchants_id,
                 transaction_id=session.session_id,
                 provider=session.provider,
                 amount=session.amount,
                 currency=session.currency,
-                state=session.initial_state.value,
+                payment_status=initial_status,
                 email=email,
                 extra_args=provider_extra,
                 request_payload=request_payload,
@@ -347,7 +360,7 @@ class PaymentMixin:
                 provider=provider,
                 amount=amount,
                 currency=currency,
-                state="failed",
+                payment_status="failed",
                 email=email,
                 extra_args=provider_extra,
                 request_payload=request_payload,
@@ -377,7 +390,7 @@ class PaymentMixin:
             record.transaction_id,
             record.provider,
             record.amount,
-            record.state,
+            record.payment_status,
         )
         return record
 
@@ -392,18 +405,18 @@ class PaymentMixin:
             self, for method chaining.
         """
         ext = self._get_ext()
-        old_state = self.state
-        self.state = "refunded"
+        old_status = self.payment_status
+        self.payment_status = "refunded"
         ext._db.session.commit()
-        if old_state != self.state:
+        if old_status != self.payment_status:
             ext._emit_signal(
                 payment_state_changed,
                 payment=self,
                 payment_id=self.merchants_id,
                 merchants_id=self.merchants_id,
                 transaction_id=self.transaction_id,
-                old_state=old_state,
-                new_state=self.state,
+                old_status=old_status,
+                new_status=self.payment_status,
             )
         logger.info("Payment refunded: merchants_id=%s", self.merchants_id)
         return self
@@ -415,18 +428,18 @@ class PaymentMixin:
             self, for method chaining.
         """
         ext = self._get_ext()
-        old_state = self.state
-        self.state = "cancelled"
+        old_status = self.payment_status
+        self.payment_status = "cancelled"
         ext._db.session.commit()
-        if old_state != self.state:
+        if old_status != self.payment_status:
             ext._emit_signal(
                 payment_state_changed,
                 payment=self,
                 payment_id=self.merchants_id,
                 merchants_id=self.merchants_id,
                 transaction_id=self.transaction_id,
-                old_state=old_state,
-                new_state=self.state,
+                old_status=old_status,
+                new_status=self.payment_status,
             )
         logger.info("Payment cancelled: merchants_id=%s", self.merchants_id)
         return self
@@ -446,26 +459,26 @@ class PaymentMixin:
         ext = self._get_ext()
         client = ext.get_client(self.provider)
         status = client.payments.get(self.transaction_id)
-        old_state = self.state
-        self.state = status.state.value
+        old_status = self.payment_status
+        self.payment_status = status.state.value
         self.response_payload = status.raw if isinstance(status.raw, dict) else {}
         self.payment_object = status.model_dump(mode="json")
         ext._db.session.commit()
-        if old_state != self.state:
+        if old_status != self.payment_status:
             ext._emit_signal(
                 payment_state_changed,
                 payment=self,
                 payment_id=self.merchants_id,
                 merchants_id=self.merchants_id,
                 transaction_id=self.transaction_id,
-                old_state=old_state,
-                new_state=self.state,
+                old_status=old_status,
+                new_status=self.payment_status,
             )
         logger.info(
-            "Payment synced from provider: merchants_id=%s transaction_id=%s new_state=%s",
+            "Payment synced from provider: merchants_id=%s transaction_id=%s new_status=%s",
             self.merchants_id,
             self.transaction_id,
-            self.state,
+            self.payment_status,
         )
         return self
 
@@ -503,8 +516,10 @@ class PaymentMixin:
         if insp is None or insp.transient or insp.pending:
             raise RuntimeError("start_payment() requires a persisted payment record.")
 
-        if self.state != "pending":
-            raise ValueError(f"start_payment() requires state='pending', got {self.state!r}.")
+        if self.payment_status != "pending":
+            raise ValueError(
+                f"start_payment() requires payment_status='pending', got {self.payment_status!r}."
+            )
 
         if not self.merchants_id:
             self.merchants_id = str(uuid.uuid4())
@@ -561,7 +576,8 @@ class PaymentMixin:
         self.provider = session.provider
         self.amount = session.amount
         self.currency = session.currency
-        self.state = session.initial_state.value
+        initial_status = _extract_initial_status(session)
+        self.payment_status = initial_status
         self.extra_args = provider_extra
         self.request_payload = request_payload
         self.response_payload = response_raw
@@ -578,7 +594,7 @@ class PaymentMixin:
             self.merchants_id,
             self.transaction_id,
             self.provider,
-            self.state,
+            self.payment_status,
         )
 
         return session.redirect_url
@@ -588,7 +604,7 @@ class PaymentMixin:
     # ------------------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.merchants_id} state={self.state!r}>"
+        return f"<{self.__class__.__name__} {self.merchants_id} payment_status={self.payment_status!r}>"
 
     def to_dict(self) -> dict:
         """Return a plain-dict representation (mirrors the in-memory store format)."""
@@ -598,7 +614,7 @@ class PaymentMixin:
             "provider": self.provider,
             "amount": f"{Decimal(self.amount):.2f}",
             "currency": self.currency,
-            "state": self.state,
+            "payment_status": self.payment_status,
             "email": self.email,
             "extra_args": self.extra_args or {},
             "request_payload": self.request_payload or {},

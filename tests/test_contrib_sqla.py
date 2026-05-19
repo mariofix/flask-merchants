@@ -79,7 +79,7 @@ def test_payment_model_fields(Payment):
     """Payment model has the expected columns."""
     cols = {c.key for c in Payment.__table__.columns}
     assert "transaction_id" in cols
-    assert "state" in cols
+    assert "payment_status" in cols
     assert "provider" in cols
     assert "amount" in cols
     assert "currency" in cols
@@ -91,7 +91,7 @@ def test_payment_model_repr(Payment):
     p = Payment(
         merchants_id="s1",
         transaction_id="t1",
-        state="pending",
+        payment_status="pending",
         provider="dummy",
         amount="1.00",
         currency="USD",
@@ -107,12 +107,12 @@ def test_payment_to_dict(Payment):
         provider="dummy",
         amount="5.00",
         currency="EUR",
-        state="succeeded",
+        payment_status="succeeded",
     )
     d = p.to_dict()
     assert d["merchants_id"] == "s2"
     assert d["transaction_id"] == "t2"
-    assert d["state"] == "succeeded"
+    assert d["payment_status"] == "succeeded"
     assert d["currency"] == "EUR"
 
 
@@ -133,7 +133,7 @@ def test_save_session_to_db(sqla_client, sqla_app, sqla_db, Payment):
 
         record = sqla_db.session.query(Payment).filter_by(transaction_id=session_id).first()
         assert record is not None
-        assert record.state == "pending"
+        assert record.payment_status == "pending"
         assert record.amount == Decimal("10.00")
 
 
@@ -181,7 +181,7 @@ def test_update_state_in_db(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
         sqla_ext.update_state(session_id, "succeeded")
 
         record = sqla_db.session.query(Payment).filter_by(transaction_id=session_id).first()
-        assert record.state == "succeeded"
+        assert record.payment_status == "succeeded"
 
 
 def test_all_sessions_from_db(sqla_client, sqla_app, sqla_ext):
@@ -231,7 +231,7 @@ def test_on_model_change_valid_state(sqla_app, sqla_db, Payment):
             provider="dummy",
             amount="1.00",
             currency="USD",
-            state="succeeded",
+            payment_status="succeeded",
         )
         view.on_model_change(None, p, is_created=False)  # should not raise
 
@@ -250,12 +250,12 @@ def test_on_model_change_invalid_state(sqla_app, sqla_db, Payment):
             provider="dummy",
             amount="1.00",
             currency="USD",
-            state="pending",
+            payment_status="pending",
         )
         # Write directly to __dict__ to bypass the SQLAlchemy InstrumentedAttribute
         # descriptor (a data descriptor that triggers @validates on __set__) so we
         # can test the on_model_change guard in isolation from @validates.
-        p.__dict__["state"] = "invalid_state"
+        p.__dict__["payment_status"] = "invalid_state"
         with pytest.raises((ValidationError, ValueError)):
             view.on_model_change(None, p, is_created=False)
 
@@ -269,7 +269,7 @@ def test_validates_state_rejects_invalid(Payment):
             provider="dummy",
             amount="1.00",
             currency="USD",
-            state="invalid_state",
+            payment_status="invalid_state",
         )
 
 
@@ -284,9 +284,9 @@ def test_validates_state_accepts_valid(Payment):
             provider="dummy",
             amount="1.00",
             currency="USD",
-            state=state,
+            payment_status=state,
         )
-        assert p.state == state
+        assert p.payment_status == state
 
 
 # ---------------------------------------------------------------------------
@@ -312,7 +312,7 @@ def test_action_refund(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
 
         sqla_db.session.expire_all()
         refreshed = sqla_db.session.query(Payment).filter_by(transaction_id=session_id).first()
-        assert refreshed.state == "refunded"
+        assert refreshed.payment_status == "refunded"
 
 
 def test_action_cancel(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
@@ -332,7 +332,7 @@ def test_action_cancel(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
 
         sqla_db.session.expire_all()
         refreshed = sqla_db.session.query(Payment).filter_by(transaction_id=session_id).first()
-        assert refreshed.state == "cancelled"
+        assert refreshed.payment_status == "cancelled"
 
 
 def test_action_sync(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
@@ -342,7 +342,7 @@ def test_action_sync(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
         session_id = resp.get_json()["transaction_id"]
 
         record = sqla_db.session.query(Payment).filter_by(transaction_id=session_id).first()
-        assert record.state == "pending"
+        assert record.payment_status == "pending"
         pk = str(record.id)
 
         action_resp = sqla_client.post(
@@ -354,7 +354,7 @@ def test_action_sync(sqla_client, sqla_app, sqla_db, sqla_ext, Payment):
         sqla_db.session.expire_all()
         refreshed = sqla_db.session.query(Payment).filter_by(transaction_id=session_id).first()
         # DummyProvider returns a terminal state
-        assert refreshed.state != "pending"
+        assert refreshed.payment_status != "pending"
 
 
 # ---------------------------------------------------------------------------
@@ -378,7 +378,7 @@ def test_payment_model_view_form_create_columns():
     assert "provider" in PaymentModelView.form_create_columns
     assert "amount" in PaymentModelView.form_create_columns
     assert "currency" in PaymentModelView.form_create_columns
-    assert "state" in PaymentModelView.form_create_columns
+    assert "payment_status" in PaymentModelView.form_create_columns
 
 
 def test_payment_model_view_form_edit_columns():
@@ -388,7 +388,7 @@ def test_payment_model_view_form_edit_columns():
     assert "provider" in PaymentModelView.form_edit_columns
     assert "amount" in PaymentModelView.form_edit_columns
     assert "currency" in PaymentModelView.form_edit_columns
-    assert "state" in PaymentModelView.form_edit_columns
+    assert "payment_status" in PaymentModelView.form_edit_columns
     # merchants_id should not be editable after creation
     assert "merchants_id" not in PaymentModelView.form_edit_columns
 

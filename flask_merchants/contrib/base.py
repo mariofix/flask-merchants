@@ -78,7 +78,7 @@ class PaymentViewMixin:
         "provider",
         "amount",
         "currency",
-        "state",
+        "payment_status",
     ]
 
     #: Human-readable column header labels.
@@ -88,7 +88,7 @@ class PaymentViewMixin:
         "provider": "Provider",
         "amount": "Amount",
         "currency": "Currency",
-        "state": "State",
+        "payment_status": "Payment Status",
     }
 
     #: Tooltip help text shown next to each column header.
@@ -98,17 +98,17 @@ class PaymentViewMixin:
         "provider": "The payment gateway that processed this transaction.",
         "amount": "Payment amount in the smallest currency unit (e.g. cents).",
         "currency": "ISO-4217 currency code (e.g. USD, EUR, CLP).",
-        "state": "Current processing state of the payment.",
+        "payment_status": "Current processing status of the payment.",
     }
 
-    #: Custom cell renderers: state as a Bootstrap badge, merchants_id in ``<small>``.
+    #: Custom cell renderers: payment_status as a Bootstrap badge, merchants_id in ``<small>``.
     column_formatters: ClassVar[dict] = {
-        "state": _fmt_state,
+        "payment_status": _fmt_state,
         "merchants_id": _fmt_merchants_id,
     }
 
     #: Choices list exposed to templates / ``scaffold_form`` implementations.
-    state_choices = _STATE_CHOICES
+    payment_status_choices = _STATE_CHOICES
 
-    #: WTForms field choices for the ``state`` form field.
-    form_choices: ClassVar[dict] = {"state": _STATE_CHOICES}
+    #: WTForms field choices for the ``payment_status`` form field.
+    form_choices: ClassVar[dict] = {"payment_status": _STATE_CHOICES}

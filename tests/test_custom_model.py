@@ -94,7 +94,7 @@ def test_payment_mixin_fields(Pagos):
         "provider",
         "amount",
         "currency",
-        "state",
+        "payment_status",
         "request_payload",
         "response_payload",
     ):
@@ -109,12 +109,12 @@ def test_payment_mixin_to_dict(Pagos):
         provider="dummy",
         amount="10.00",
         currency="USD",
-        state="pending",
+        payment_status="pending",
     )
     d = p.to_dict()
     assert d["merchants_id"] == "s1"
     assert d["transaction_id"] == "t1"
-    assert d["state"] == "pending"
+    assert d["payment_status"] == "pending"
     assert d["currency"] == "USD"
     assert "request_payload" in d
     assert "response_payload" in d
@@ -122,7 +122,7 @@ def test_payment_mixin_to_dict(Pagos):
 
 def test_payment_mixin_repr(Pagos):
     """__repr__ uses the subclass name, not 'Payment'."""
-    p = Pagos(merchants_id="s2", state="succeeded")
+    p = Pagos(merchants_id="s2", payment_status="succeeded")
     assert "Pagos" in repr(p)
     assert "s2" in repr(p)
 
@@ -136,7 +136,7 @@ def test_start_payment_success(pagos_app, pagos_db, Pagos):
             provider="dummy",
             amount=Decimal("12.34"),
             currency="USD",
-            state="pending",
+            payment_status="pending",
             email="user@example.com",
         )
         pagos_db.session.add(record)
@@ -150,7 +150,7 @@ def test_start_payment_success(pagos_app, pagos_db, Pagos):
 
         assert checkout_url
         assert record.transaction_id.startswith("dummy_sess_")
-        assert record.state == "pending"
+        assert record.payment_status == "pending"
         assert record.request_payload["success_url"] == "https://example.test/success"
         assert record.request_payload["cancel_url"] == "https://example.test/cancel"
         assert record.request_payload["reference"] == "order-42"
@@ -172,7 +172,7 @@ def test_start_payment_emits_signal(pagos_app, pagos_db, Pagos):
             provider="dummy",
             amount=Decimal("10.00"),
             currency="USD",
-            state="pending",
+            payment_status="pending",
         )
         pagos_db.session.add(record)
         pagos_db.session.commit()
@@ -207,7 +207,7 @@ def test_refund_emits_payment_state_changed_signal(pagos_app, pagos_db, Pagos):
             provider="dummy",
             amount=Decimal("10.00"),
             currency="USD",
-            state="pending",
+            payment_status="pending",
         )
         pagos_db.session.add(record)
         pagos_db.session.commit()
@@ -227,8 +227,8 @@ def test_refund_emits_payment_state_changed_signal(pagos_app, pagos_db, Pagos):
         sender, payload = captured[0]
         assert sender is pagos_app
         assert payload["payment_id"] == "m-refund-signal"
-        assert payload["old_state"] == "pending"
-        assert payload["new_state"] == "refunded"
+        assert payload["old_status"] == "pending"
+        assert payload["new_status"] == "refunded"
 
 
 def test_start_payment_requires_persisted_record(pagos_app, Pagos):
@@ -240,7 +240,7 @@ def test_start_payment_requires_persisted_record(pagos_app, Pagos):
             provider="dummy",
             amount=Decimal("10.00"),
             currency="USD",
-            state="pending",
+            payment_status="pending",
         )
 
         with pytest.raises(RuntimeError, match="persisted payment record"):
@@ -259,12 +259,12 @@ def test_start_payment_requires_pending_state(pagos_app, pagos_db, Pagos):
             provider="dummy",
             amount=Decimal("10.00"),
             currency="USD",
-            state="succeeded",
+            payment_status="succeeded",
         )
         pagos_db.session.add(record)
         pagos_db.session.commit()
 
-        with pytest.raises(ValueError, match="state='pending'"):
+        with pytest.raises(ValueError, match="payment_status='pending'"):
             record.start_payment(
                 success_url="https://example.test/success",
                 cancel_url="https://example.test/cancel",
@@ -280,7 +280,7 @@ def test_start_payment_requires_required_fields(pagos_app, pagos_db, Pagos):
             provider="",
             amount=Decimal("10.00"),
             currency="USD",
-            state="pending",
+            payment_status="pending",
         )
         pagos_db.session.add(record)
         pagos_db.session.commit()
@@ -301,7 +301,7 @@ def test_start_payment_bubbles_provider_errors(pagos_app, pagos_db, Pagos, pagos
             provider="dummy",
             amount=Decimal("19.99"),
             currency="USD",
-            state="pending",
+            payment_status="pending",
         )
         pagos_db.session.add(record)
         pagos_db.session.commit()
@@ -332,7 +332,7 @@ def test_start_payment_requires_redirect_url(pagos_app, pagos_db, Pagos, pagos_e
             provider="dummy",
             amount=Decimal("8.00"),
             currency="USD",
-            state="pending",
+            payment_status="pending",
         )
         pagos_db.session.add(record)
         pagos_db.session.commit()
@@ -347,7 +347,7 @@ def test_start_payment_requires_redirect_url(pagos_app, pagos_db, Pagos, pagos_e
             provider = "dummy"
             amount = Decimal("8.00")
             currency = "USD"
-            initial_state = _State()
+            initial_status = _State()
 
         class _NoRedirectPayments:
             @staticmethod
@@ -385,7 +385,7 @@ def test_save_session_uses_custom_model(pagos_client, pagos_app, pagos_db, Pagos
 
         record = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         assert record is not None
-        assert record.state == "pending"
+        assert record.payment_status == "pending"
         assert record.amount == Decimal("25.00")
         assert record.__class__.__name__ == "Pagos"
 
@@ -417,7 +417,7 @@ def test_update_state_on_custom_model(pagos_client, pagos_app, pagos_db, pagos_e
         pagos_ext.update_state(session_id, "succeeded")
 
         record = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
-        assert record.state == "succeeded"
+        assert record.payment_status == "succeeded"
 
 
 def test_all_sessions_from_custom_model(pagos_client, pagos_app, pagos_ext):
@@ -458,7 +458,7 @@ def test_admin_pagos_refund_action(pagos_client, pagos_app, pagos_db, Pagos):
 
         pagos_db.session.expire_all()
         refreshed = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
-        assert refreshed.state == "refunded"
+        assert refreshed.payment_status == "refunded"
 
 
 def test_admin_pagos_sync_action(pagos_client, pagos_app, pagos_db, Pagos):
@@ -468,7 +468,7 @@ def test_admin_pagos_sync_action(pagos_client, pagos_app, pagos_db, Pagos):
         session_id = resp.get_json()["transaction_id"]
 
         record = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
-        assert record.state == "pending"
+        assert record.payment_status == "pending"
         pk = str(record.id)
 
         action_resp = pagos_client.post(
@@ -480,4 +480,4 @@ def test_admin_pagos_sync_action(pagos_client, pagos_app, pagos_db, Pagos):
         pagos_db.session.expire_all()
         refreshed = pagos_db.session.query(Pagos).filter_by(transaction_id=session_id).first()
         # DummyProvider always returns a terminal state
-        assert refreshed.state != "pending"
+        assert refreshed.payment_status != "pending"

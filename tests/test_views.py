@@ -32,7 +32,7 @@ def test_checkout_stores_session(client, ext):
     assert stored is not None
     assert stored["amount"] == "5.00"
     assert stored["currency"] == "USD"
-    assert stored["state"] == "pending"
+    assert stored["payment_status"] == "pending"
 
 
 def test_checkout_emits_checkout_session_saved_signal(client, app):
@@ -157,4 +157,4 @@ def test_payment_status_updates_store(client, ext):
         # Check status - should update store to succeeded
         tc.get(f"/merchants/status/{session_id}")
         stored = test_ext.get_session(session_id)
-        assert stored["state"] == "succeeded"
+        assert stored["payment_status"] == "succeeded"

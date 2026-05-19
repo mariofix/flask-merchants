@@ -731,7 +731,7 @@ class FlaskMerchants:
             "provider": session.provider,
             "amount": str(session.amount),
             "currency": session.currency,
-            "state": "pending",
+            "payment_status": "pending",
             "request_payload": req_payload,
             "response_payload": response_raw,
         }
@@ -744,7 +744,7 @@ class FlaskMerchants:
                 provider=session.provider,
                 amount=session.amount,
                 currency=session.currency,
-                state="pending",
+                payment_status="pending",
                 request_payload=req_payload,
                 response_payload=response_raw,
             )
@@ -760,7 +760,7 @@ class FlaskMerchants:
             provider=session.provider,
             amount=str(session.amount),
             currency=session.currency,
-            state="pending",
+            payment_status="pending",
             model_class=model_class,
             request_payload=req_payload,
             response_payload=response_raw,
@@ -797,7 +797,7 @@ class FlaskMerchants:
         Searches by ``merchants_id`` first, then by ``transaction_id``.
 
         .. deprecated::
-            Prefer ``payment.state = "..."`` with a direct commit, or
+            Prefer ``payment.payment_status = "..."`` with a direct commit, or
             ``payment.refund()`` / ``payment.cancel()`` for common transitions.
 
         When multiple models are registered, all of them are searched in
@@ -821,63 +821,63 @@ class FlaskMerchants:
                     if record is not None:
                         break
             if record is not None:
-                old_state = record.state
-                record.state = state
+                old_status = record.payment_status
+                record.payment_status = state
                 self._db.session.commit()
                 mid = record.merchants_id
                 if mid in self._store:
-                    self._store[mid]["state"] = state
-                if old_state != state:
+                    self._store[mid]["payment_status"] = state
+                if old_status != state:
                     self._emit_signal(
                         payment_state_changed,
                         payment_id=payment_id,
                         merchants_id=record.merchants_id,
                         transaction_id=record.transaction_id,
-                        old_state=old_state,
-                        new_state=state,
+                        old_status=old_status,
+                        new_status=state,
                     )
                 return True
             # Not found in any model - fall back to in-memory
             if payment_id not in self._store:
                 return False
-            old_state = self._store[payment_id]["state"]
-            self._store[payment_id]["state"] = state
-            if old_state != state:
+            old_status = self._store[payment_id]["payment_status"]
+            self._store[payment_id]["payment_status"] = state
+            if old_status != state:
                 self._emit_signal(
                     payment_state_changed,
                     payment_id=payment_id,
                     merchants_id=payment_id,
                     transaction_id=self._store[payment_id].get("transaction_id"),
-                    old_state=old_state,
-                    new_state=state,
+                    old_status=old_status,
+                    new_status=state,
                 )
             return True
 
         if payment_id in self._store:
-            old_state = self._store[payment_id]["state"]
-            self._store[payment_id]["state"] = state
-            if old_state != state:
+            old_status = self._store[payment_id]["payment_status"]
+            self._store[payment_id]["payment_status"] = state
+            if old_status != state:
                 self._emit_signal(
                     payment_state_changed,
                     payment_id=payment_id,
                     merchants_id=payment_id,
                     transaction_id=self._store[payment_id].get("transaction_id"),
-                    old_state=old_state,
-                    new_state=state,
+                    old_status=old_status,
+                    new_status=state,
                 )
             return True
         for data in self._store.values():
             if data.get("transaction_id") == payment_id:
-                old_state = data["state"]
-                data["state"] = state
-                if old_state != state:
+                old_status = data["payment_status"]
+                data["payment_status"] = state
+                if old_status != state:
                     self._emit_signal(
                         payment_state_changed,
                         payment_id=payment_id,
                         merchants_id=data.get("merchants_id"),
                         transaction_id=data.get("transaction_id"),
-                        old_state=old_state,
-                        new_state=state,
+                        old_status=old_status,
+                        new_status=state,
                     )
                 return True
         return False
@@ -913,7 +913,7 @@ class FlaskMerchants:
         except Exception:
             return None
         self.update_state(payment_id, status.state.value)
-        stored["state"] = status.state.value
+        stored["payment_status"] = status.state.value
         return stored
 
     def all_sessions(self, *, model_class=None) -> list[dict[str, Any]]:

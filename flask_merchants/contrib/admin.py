@@ -104,7 +104,7 @@ class PaymentView(PaymentViewMixin, BaseModelView):
 
     Provides:
     - List of all stored payment sessions with search and sorting.
-    - Edit state via modal popup (one payment at a time).
+    - Edit payment status via modal popup (one payment at a time).
     - Bulk Refund, Cancel, and Sync actions via the "With selected" action dropdown.
 
     Args:
@@ -114,7 +114,7 @@ class PaymentView(PaymentViewMixin, BaseModelView):
         category: Optional admin category/group name.
     """
 
-    # Disable create/delete; enable modal edit for state changes.
+    # Disable create/delete; enable modal edit for payment-status changes.
     can_create = True
     can_delete = True
     can_edit = True
@@ -128,10 +128,10 @@ class PaymentView(PaymentViewMixin, BaseModelView):
         "provider",
         "amount",
         "currency",
-        "state",
+        "payment_status",
     ]
-    column_searchable_list: ClassVar[list] = ["merchants_id", "transaction_id", "provider", "state"]
-    column_sortable_list: ClassVar[list] = ["provider", "amount", "currency", "state"]
+    column_searchable_list: ClassVar[list] = ["merchants_id", "transaction_id", "provider", "payment_status"]
+    column_sortable_list: ClassVar[list] = ["provider", "amount", "currency", "payment_status"]
 
     def __init__(
         self,
@@ -155,14 +155,14 @@ class PaymentView(PaymentViewMixin, BaseModelView):
     # ------------------------------------------------------------------
 
     def scaffold_list_columns(self) -> list[str]:
-        return ["merchants_id", "transaction_id", "provider", "amount", "currency", "state"]
+        return ["merchants_id", "transaction_id", "provider", "amount", "currency", "payment_status"]
 
     def scaffold_sortable_columns(self) -> dict[str, str]:
         return {
             "provider": "provider",
             "amount": "amount",
             "currency": "currency",
-            "state": "state",
+            "payment_status": "payment_status",
         }
 
     def scaffold_form(self):
@@ -172,10 +172,10 @@ class PaymentView(PaymentViewMixin, BaseModelView):
         choices = _STATE_CHOICES
 
         class StateForm(WTForm):
-            state = SelectField(
-                "State",
+            payment_status = SelectField(
+                "Payment Status",
                 choices=choices,
-                description="The current processing state of this payment session.",
+                description="The current processing status of this payment session.",
             )
 
         return StateForm
@@ -209,7 +209,7 @@ class PaymentView(PaymentViewMixin, BaseModelView):
                 if search_lower in str(p.get("merchants_id", "")).lower()
                 or search_lower in str(p.get("transaction_id", "")).lower()
                 or search_lower in str(p.get("provider", "")).lower()
-                or search_lower in str(p.get("state", "")).lower()
+                or search_lower in str(p.get("payment_status", "")).lower()
             ]
 
         if sort_field:
@@ -235,11 +235,11 @@ class PaymentView(PaymentViewMixin, BaseModelView):
         return False
 
     def update_model(self, form, model) -> bool:
-        """Update payment state from the modal edit form."""
+        """Update payment status from the modal edit form."""
         payment_id = self.get_pk_value(model)
-        new_state = form.state.data
-        if self._ext.update_state(payment_id, new_state):
-            flash(f"Payment {payment_id} updated to '{new_state}'.", "success")
+        new_status = form.payment_status.data
+        if self._ext.update_state(payment_id, new_status):
+            flash(f"Payment {payment_id} updated to '{new_status}'.", "success")
             return True
         flash(f"Payment {payment_id} not found.", "danger")
         return False

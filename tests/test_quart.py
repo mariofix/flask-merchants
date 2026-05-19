@@ -60,7 +60,7 @@ async def test_quart_checkout_stores_session(quart_app, quart_ext):
 
     stored = quart_ext.get_session(session_id)
     assert stored is not None
-    assert stored["state"] == "pending"
+    assert stored["payment_status"] == "pending"
     assert stored["currency"] == "EUR"
 
 
@@ -123,7 +123,7 @@ async def test_quart_payment_status(quart_app, quart_ext):
 
     # Store should be updated
     stored = quart_ext.get_session(session_id)
-    assert stored["state"] == status_data["state"]
+    assert stored["payment_status"] == status_data["state"]
 
 
 # ---------------------------------------------------------------------------

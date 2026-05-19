@@ -80,7 +80,7 @@ def test_webhook_updates_store(client, ext):
     )
 
     stored = ext.get_session(session_id)
-    assert stored["state"] == "succeeded"
+    assert stored["payment_status"] == "succeeded"
 
 
 def test_webhook_emits_webhook_event_received_signal(client, app):

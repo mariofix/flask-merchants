@@ -76,27 +76,27 @@ def test_update_state_success(admin_client, admin_ext):
 
     update_resp = admin_client.post(
         f"/admin/payments/edit/?id={session_id}",
-        data={"state": "succeeded", "url": "/admin/payments/"},
+        data={"payment_status": "succeeded", "url": "/admin/payments/"},
     )
     # Should redirect back to list
     assert update_resp.status_code == 302
 
     stored = admin_ext.get_session(session_id)
-    assert stored["state"] == "succeeded"
+    assert stored["payment_status"] == "succeeded"
 
 
 def test_update_state_unknown_id(admin_client):
     """Edit of an unknown payment ID returns to list without crashing."""
     resp = admin_client.post(
         "/admin/payments/edit/?id=does-not-exist",
-        data={"state": "failed", "url": "/admin/payments/"},
+        data={"payment_status": "failed", "url": "/admin/payments/"},
         follow_redirects=True,
     )
     assert resp.status_code == 200
 
 
 def test_update_state_modal_get(admin_client, admin_ext):
-    """GET to edit endpoint with modal=True returns 200 with a state select field."""
+    """GET to edit endpoint with modal=True returns 200 with a payment_status field."""
     checkout_resp = admin_client.post(
         "/merchants/checkout",
         json={"amount": "5.00", "currency": "USD"},
@@ -105,7 +105,7 @@ def test_update_state_modal_get(admin_client, admin_ext):
 
     resp = admin_client.get(f"/admin/payments/edit/?id={session_id}&modal=True")
     assert resp.status_code == 200
-    assert b"state" in resp.data
+    assert b"payment_status" in resp.data
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +128,7 @@ def test_refund_action_success(admin_client, admin_ext):
     assert refund_resp.status_code == 302
 
     stored = admin_ext.get_session(session_id)
-    assert stored["state"] == "refunded"
+    assert stored["payment_status"] == "refunded"
 
 
 def test_refund_action_unknown_id(admin_client):
@@ -157,7 +157,7 @@ def test_cancel_action_success(admin_client, admin_ext):
     assert cancel_resp.status_code == 302
 
     stored = admin_ext.get_session(session_id)
-    assert stored["state"] == "cancelled"
+    assert stored["payment_status"] == "cancelled"
 
 
 def test_cancel_action_unknown_id(admin_client):
@@ -204,7 +204,7 @@ def test_sync_action_success(admin_client, admin_ext):
     )
     session_id = resp.get_json()["transaction_id"]
     # State starts as pending
-    assert admin_ext.get_session(session_id)["state"] == "pending"
+    assert admin_ext.get_session(session_id)["payment_status"] == "pending"
 
     sync_resp = admin_client.post(
         "/admin/payments/action/",
@@ -213,7 +213,7 @@ def test_sync_action_success(admin_client, admin_ext):
     assert sync_resp.status_code == 302
 
     # DummyProvider always returns a terminal state; store should be updated
-    updated_state = admin_ext.get_session(session_id)["state"]
+    updated_state = admin_ext.get_session(session_id)["payment_status"]
     assert updated_state != "pending"
 
 
@@ -486,11 +486,11 @@ def test_payments_list_has_nav_tabs(admin_client):
 
 
 def test_payments_list_color_coded_badges(admin_client, admin_ext):
-    """Color-coded state badges are rendered for known states."""
+    """Color-coded payment-status badges are rendered for known statuses."""
     admin_client.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
     resp = admin_client.get("/admin/payments/")
     assert resp.status_code == 200
-    # Pending state should show a secondary badge by default
+    # Pending payment_status should show a secondary badge by default
     assert b"badge-secondary" in resp.data
 
 
@@ -612,7 +612,7 @@ def test_payment_view_search_supported(admin_client, admin_ext):
 
 
 def test_payment_view_search_filters_results(admin_client, admin_ext):
-    """Search query filters displayed payments by session_id, provider, or state."""
+    """Search query filters displayed payments by session_id, provider, or payment_status."""
     admin_client.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
 
     resp = admin_client.get("/admin/payments/?search=dummy_sess_")
@@ -633,7 +633,7 @@ def test_payment_view_sort_column_links(admin_client):
 
 
 def test_payment_view_sort_by_state(admin_client, admin_ext):
-    """Payments can be sorted by state via the sort URL param."""
+    """Payments can be sorted by payment_status via the sort URL param."""
     # Create two checkouts and give them different states
     r1 = admin_client.post("/merchants/checkout", json={"amount": "1.00", "currency": "USD"})
     r2 = admin_client.post("/merchants/checkout", json={"amount": "2.00", "currency": "USD"})
@@ -642,7 +642,7 @@ def test_payment_view_sort_by_state(admin_client, admin_ext):
     admin_ext.update_state(sid1, "succeeded")
     admin_ext.update_state(sid2, "failed")
 
-    # Sort by state column (index 4 in column_list)
+    # Sort by payment_status column (index 4 in column_list)
     resp = admin_client.get("/admin/payments/?sort=4")
     assert resp.status_code == 200
     assert b"succeeded" in resp.data or b"failed" in resp.data
@@ -666,9 +666,9 @@ def test_payment_view_column_config():
     """PaymentView exposes column_searchable_list and column_sortable_list."""
     assert "transaction_id" in PaymentView.column_searchable_list
     assert "provider" in PaymentView.column_searchable_list
-    assert "state" in PaymentView.column_searchable_list
+    assert "payment_status" in PaymentView.column_searchable_list
     assert "provider" in PaymentView.column_sortable_list
-    assert "state" in PaymentView.column_sortable_list
+    assert "payment_status" in PaymentView.column_sortable_list
 
 
 def test_providers_view_column_config():

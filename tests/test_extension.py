@@ -128,7 +128,7 @@ def test_init_app_factory_with_db():
             session_id = resp.get_json()["transaction_id"]
         record = db.session.query(Payment).filter_by(transaction_id=session_id).first()
         assert record is not None
-        assert record.state == "pending"
+        assert record.payment_status == "pending"
 
 
 def test_init_app_factory_with_models():

@@ -61,19 +61,19 @@
         {% endblock %}
         {% for c, name in list_columns %}
         <td class="col-{{ c }}">
-          {% if c == 'state' %}
-            {% if row.state == 'succeeded' %}
-              <span class="badge badge-success">{{ row.state }}</span>
-            {% elif row.state == 'failed' %}
-              <span class="badge badge-danger">{{ row.state }}</span>
-            {% elif row.state == 'cancelled' %}
-              <span class="badge badge-dark">{{ row.state }}</span>
-            {% elif row.state == 'refunded' %}
-              <span class="badge badge-warning">{{ row.state }}</span>
-            {% elif row.state == 'processing' %}
-              <span class="badge badge-info">{{ row.state }}</span>
+          {% if c == 'payment_status' %}
+            {% if row.payment_status == 'succeeded' %}
+              <span class="badge badge-success">{{ row.payment_status }}</span>
+            {% elif row.payment_status == 'failed' %}
+              <span class="badge badge-danger">{{ row.payment_status }}</span>
+            {% elif row.payment_status == 'cancelled' %}
+              <span class="badge badge-dark">{{ row.payment_status }}</span>
+            {% elif row.payment_status == 'refunded' %}
+              <span class="badge badge-warning">{{ row.payment_status }}</span>
+            {% elif row.payment_status == 'processing' %}
+              <span class="badge badge-info">{{ row.payment_status }}</span>
             {% else %}
-              <span class="badge badge-secondary">{{ row.state }}</span>
+              <span class="badge badge-secondary">{{ row.payment_status }}</span>
             {% endif %}
           {% elif c == 'merchants_id' %}
             <small>{{ row.merchants_id }}</small>

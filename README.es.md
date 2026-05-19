@@ -84,8 +84,8 @@ app = Flask(__name__)
 ext = FlaskMerchants(app)
 
 @payment_state_changed.connect_via(app)
-def on_state_change(sender, *, payment_id, old_state, new_state, **kwargs):
-    print(f"{payment_id}: {old_state} -> {new_state}")
+def on_state_change(sender, *, payment_id, old_status, new_status, **kwargs):
+    print(f"{payment_id}: {old_status} -> {new_status}")
 ```
 
 Señales disponibles:
@@ -272,7 +272,7 @@ with app.app_context():
         provider="dummy",
         amount="19.99",
         currency="USD",
-        state="pending",
+        payment_status="pending",
     )
     db.session.add(pago)
     db.session.commit()
@@ -284,7 +284,7 @@ with app.app_context():
     )
 ```
 
-`start_payment()` valida que el registro esté persistido y en `state="pending"`,
+`start_payment()` valida que el registro esté persistido y en `payment_status="pending"`,
 guarda payloads de request/response para auditoría, actualiza los datos de la
 transacción del proveedor, hace `commit` y retorna `redirect_url`.
 

@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from flask_merchants.contrib.base import _STATE_CHOICES, PaymentViewMixin
+from flask_merchants.contrib.base import _STATE_CHOICES, _fmt_state, PaymentViewMixin
 
 try:
     from flask_admin.actions import action
@@ -55,7 +55,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
     Provides:
     - Searchable / filterable list of all payment records.
     - Create, view, and edit payment records (all user-editable fields).
-    - State validation via ``on_model_change`` as a Flask-Admin-level guard,
+    - Payment status validation via ``on_model_change`` as a Flask-Admin-level guard,
       backed by the SQLAlchemy ``@validates`` hook in
       :class:`~flask_merchants.models.PaymentMixin` at the ORM level.
     - Bulk **Refund**, **Cancel**, and **Sync from Provider** actions.
@@ -80,22 +80,28 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         "provider",
         "amount",
         "currency",
-        "state",
+        "payment_status",
         "created_at",
         "updated_at",
     ]
     column_labels: ClassVar[dict] = {
         **PaymentViewMixin.column_labels,
+        "payment_status": "State",
         "created_at": "Created",
         "updated_at": "Updated",
     }
     column_descriptions: ClassVar[dict] = {
         **PaymentViewMixin.column_descriptions,
+        "payment_status": "Current processing state of the payment.",
         "created_at": "Timestamp when this payment record was first created.",
         "updated_at": "Timestamp of the most recent update to this payment record.",
     }
+    column_formatters: ClassVar[dict] = {
+        **PaymentViewMixin.column_formatters,
+        "payment_status": _fmt_state,
+    }
     column_searchable_list: ClassVar[list] = ["merchants_id", "transaction_id", "provider"]
-    column_filters: ClassVar[list] = ["state", "provider", "currency"]
+    column_filters: ClassVar[list] = ["payment_status", "provider", "currency"]
     column_default_sort = ("created_at", True)
     can_view_details = True
 
@@ -109,7 +115,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         "provider",
         "amount",
         "currency",
-        "state",
+        "payment_status",
     ]
 
     # Fields available when editing an existing payment.
@@ -117,8 +123,9 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         "provider",
         "amount",
         "currency",
-        "state",
+        "payment_status",
     ]
+    form_choices: ClassVar[dict] = {"payment_status": _STATE_CHOICES}
 
     # ------------------------------------------------------------------
     # Init
@@ -153,10 +160,10 @@ class PaymentModelView(PaymentViewMixin, ModelView):
     # ------------------------------------------------------------------
 
     def on_model_change(self, form, model, is_created: bool) -> None:
-        """Validate state before committing.
+        """Validate payment status before committing.
 
         WTForms rejects unknown choices via ``form_choices`` before this hook
-        runs.  ``PaymentMixin.validate_state`` (a SQLAlchemy ``@validates``
+        runs.  ``PaymentMixin.validate_payment_status`` (a SQLAlchemy ``@validates``
         hook) rejects invalid values at the ORM attribute level.  This method
         acts as a third, Flask-Admin-level guard so that any value that
         somehow slips through still raises a :class:`wtforms.ValidationError`
@@ -164,10 +171,12 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         exception.
         """
         valid_states = {s for s, _ in _STATE_CHOICES}
-        if model.state not in valid_states:
+        if model.payment_status not in valid_states:
             from wtforms import ValidationError
 
-            raise ValidationError(f"Invalid state {model.state!r}. Choose one of: {', '.join(sorted(valid_states))}.")
+            raise ValidationError(
+                f"Invalid state {model.payment_status!r}. Choose one of: {', '.join(sorted(valid_states))}."
+            )
 
     def after_model_change(self, form, model, is_created: bool) -> None:
         """Called after a successful commit.
@@ -176,7 +185,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
         both storage backends stay consistent.
         """
         if self._ext is not None:
-            self._ext.update_state(model.merchants_id, model.state)
+            self._ext.update_state(model.merchants_id, model.payment_status)
 
     # ------------------------------------------------------------------
     # Bulk actions
@@ -192,7 +201,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
             for pk in ids:
                 record = self.get_one(pk)
                 if record is not None:
-                    record.state = "refunded"
+                    record.payment_status = "refunded"
                     if self._ext is not None:
                         self._ext.update_state(record.merchants_id, "refunded")
                     count += 1
@@ -212,7 +221,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
             for pk in ids:
                 record = self.get_one(pk)
                 if record is not None:
-                    record.state = "cancelled"
+                    record.payment_status = "cancelled"
                     if self._ext is not None:
                         self._ext.update_state(record.merchants_id, "cancelled")
                     count += 1
@@ -239,7 +248,7 @@ class PaymentModelView(PaymentViewMixin, ModelView):
                     continue
                 try:
                     status = self._ext.client.payments.get(record.transaction_id)
-                    record.state = status.state.value
+                    record.payment_status = status.state.value
                     count += 1
                 except Exception:
                     pass
