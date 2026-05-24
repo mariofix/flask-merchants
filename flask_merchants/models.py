@@ -290,10 +290,10 @@ class PaymentMixin:
         # Auto-inject webhook notify_url only when the provider accepts it.
         try:
             provider_obj = _merchants_registry.get_provider(provider)
-            if getattr(provider_obj, "accepts_notify_url", False):
+            if notify_field := getattr(provider_obj, "accepts_notify_url", False):
                 try:
                     notify_url = ext.get_webhook_url(provider)
-                    provider_extra.setdefault("notify_url", notify_url)
+                    provider_extra[str(notify_field)] = notify_url
                 except RuntimeError:
                     pass
         except (KeyError, RuntimeError):
@@ -534,10 +534,10 @@ class PaymentMixin:
         # Auto-inject webhook notify_url only when the provider accepts it.
         try:
             provider_obj = _merchants_registry.get_provider(self.provider)
-            if getattr(provider_obj, "accepts_notify_url", False):
+            if notify_field := getattr(provider_obj, "accepts_notify_url", False):
                 try:
                     notify_url = ext.get_webhook_url(self.provider)
-                    provider_extra.setdefault("notify_url", notify_url)
+                    provider_extra[str(notify_field)] = notify_url
                 except RuntimeError:
                     pass
         except (KeyError, RuntimeError):
