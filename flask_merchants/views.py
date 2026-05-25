@@ -166,7 +166,7 @@ def create_blueprint(ext: FlaskMerchants) -> Blueprint:
         payload: bytes = request.get_data()
         secret = current_app.config.get("MERCHANTS_WEBHOOK_SECRET")
         if secret:
-            sig = request.headers.get("X-Merchants-Signature", "")
+            sig = request.headers.get("X-Merchants-Signature", None)
             if not sig:
                 return jsonify({"error": "missing signature"}), 400
             expected = "sha256=" + _hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
