@@ -517,9 +517,7 @@ class PaymentMixin:
             raise RuntimeError("start_payment() requires a persisted payment record.")
 
         if self.payment_status != "pending":
-            raise ValueError(
-                f"start_payment() requires payment_status='pending', got {self.payment_status!r}."
-            )
+            raise ValueError(f"start_payment() requires payment_status='pending', got {self.payment_status!r}.")
 
         if not self.merchants_id:
             self.merchants_id = str(uuid.uuid4())
