@@ -534,14 +534,12 @@ class PaymentMixin:
         # Auto-inject webhook notify_url only when the provider accepts it.
         try:
             provider_obj = _merchants_registry.get_provider(self.provider)
-            logger.info(f"models.py Order.start_payment: {provider_obj=}")
             if notify_field := getattr(provider_obj, "accepts_notify_url", False):
-                logger.info(f"models.py Order.start_payment: {notify_field=}")
+                logger.debug(f"start_payment() Using {notify_field=} as key for webhook callback")
                 try:
                     notify_url = ext.get_webhook_url(self.provider)
-                    logger.info(f"models.py Order.start_payment: {notify_url=}")
                     provider_extra[str(notify_field)] = notify_url
-                    logger.info(f"models.py Order.start_payment: {provider_extra=}")
+                    logger.debug(f"start_payment() provider_extra.{notify_field=} has {notify_url=}")
                 except RuntimeError:
                     pass
         except (KeyError, RuntimeError):
@@ -559,9 +557,9 @@ class PaymentMixin:
             request_payload["email"] = self.email
         if provider_extra:
             request_payload.update(provider_extra)
-        logger.info(f"models.py Order.start_payment: {request_payload=}")
+
         client = ext.get_client(self.provider)
-        logger.info(f"models.py Order.start_payment: {provider_extra=}")
+
         session = client.payments.create_checkout(
             amount=amount,
             currency=self.currency,
@@ -570,7 +568,7 @@ class PaymentMixin:
             metadata={"order_id": self.merchants_id},
             **provider_extra,
         )
-
+        print(session.model_dump(mode="json"))
         response_raw = session.raw if isinstance(session.raw, dict) else {}
         if session.redirect_url:
             response_raw.setdefault("redirect_url", session.redirect_url)
