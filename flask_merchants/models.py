@@ -568,7 +568,7 @@ class PaymentMixin:
             metadata={"order_id": self.merchants_id},
             **provider_extra,
         )
-        print(session.model_dump(mode="json"))
+        logger.info(session.model_dump(mode="json"))
         response_raw = session.raw if isinstance(session.raw, dict) else {}
         if session.redirect_url:
             response_raw.setdefault("redirect_url", session.redirect_url)
