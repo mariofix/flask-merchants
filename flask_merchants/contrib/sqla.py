@@ -34,7 +34,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from flask_merchants.contrib.base import _STATUS_CHOICES, _fmt_payment_status, PaymentViewMixin
+from flask_merchants.contrib.base import _STATUS_CHOICES, PaymentViewMixin, _fmt_payment_status
 
 try:
     from flask_admin.actions import action
