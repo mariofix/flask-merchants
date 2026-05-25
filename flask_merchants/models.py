@@ -534,10 +534,14 @@ class PaymentMixin:
         # Auto-inject webhook notify_url only when the provider accepts it.
         try:
             provider_obj = _merchants_registry.get_provider(self.provider)
+            logger.info(f"models.py Order.start_payment: {provider_obj=}")
             if notify_field := getattr(provider_obj, "accepts_notify_url", False):
+                logger.info(f"models.py Order.start_payment: {notify_field=}")
                 try:
                     notify_url = ext.get_webhook_url(self.provider)
+                    logger.info(f"models.py Order.start_payment: {notify_url=}")
                     provider_extra[str(notify_field)] = notify_url
+                    logger.info(f"models.py Order.start_payment: {provider_extra=}")
                 except RuntimeError:
                     pass
         except (KeyError, RuntimeError):
@@ -555,8 +559,9 @@ class PaymentMixin:
             request_payload["email"] = self.email
         if provider_extra:
             request_payload.update(provider_extra)
-
+        logger.info(f"models.py Order.start_payment: {request_payload=}")
         client = ext.get_client(self.provider)
+        logger.info(f"models.py Order.start_payment: {provider_extra=}")
         session = client.payments.create_checkout(
             amount=amount,
             currency=self.currency,
