@@ -482,16 +482,15 @@ def test_payment_json_widget_applies_to_configured_fields(sqla_app, sqla_db, Pay
 
 def test_payment_json_widget_invalid_path_raises(sqla_app, sqla_db, Payment):
     """Invalid payment_json_widget import paths raise a clear error."""
-    with sqla_app.app_context():
-        with pytest.raises((ValueError, ImportError, AttributeError)):
-            PaymentModelView(
-                Payment,
-                sqla_db.session,
-                name="WidgetedErr",
-                endpoint="widgeted_err",
-                payment_json_fields=("request_payload",),
-                payment_json_widget="not-a-valid-path",
-            )
+    with sqla_app.app_context(), pytest.raises((ValueError, ImportError, AttributeError)):
+        PaymentModelView(
+            Payment,
+            sqla_db.session,
+            name="WidgetedErr",
+            endpoint="widgeted_err",
+            payment_json_fields=("request_payload",),
+            payment_json_widget="not-a-valid-path",
+        )
 
 
 def test_init_app_json_widget_config_applies_to_auto_registered_view():
