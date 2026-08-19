@@ -258,6 +258,17 @@ class FlaskMerchants:
                 is always added.
                 Overrides the value passed to ``__init__``.
 
+        Config:
+            MERCHANTS_AUTOLOAD_PROVIDERS: Optional list of provider keys
+                (built-in, e.g. ``"flow"``, or dotted paths to custom
+                :class:`~merchants.Provider` subclasses, e.g.
+                ``"own_app.providers.webpay:MerchantsWebpay"``). Each entry
+                is instantiated from *app.config* and registered only when
+                its required config keys are present — see
+                :mod:`merchants.autoload`. Runs after explicit *provider* /
+                *providers* registration and before the DummyProvider
+                fallback, so explicit registration always takes priority.
+
         Any providers supplied via *provider* / *providers* are registered into
         the ``merchants`` global registry so that they become discoverable via
         :func:`merchants.list_providers`.
@@ -287,11 +298,25 @@ class FlaskMerchants:
         for p in all_providers:
             merchants.register_provider(p)
 
+        # Auto-load providers from app.config — opt-in via
+        # MERCHANTS_AUTOLOAD_PROVIDERS. Each entry is a provider key (e.g.
+        # "flow", "stripe"); a provider is only instantiated when its
+        # required config keys (e.g. FLOW_API_KEY) are present, so the same
+        # image can serve a CLP-only deployment and an international one
+        # purely by which keys are set per environment. See
+        # merchants.autoload for the full key mapping.
+        autoload_keys = app.config.get("MERCHANTS_AUTOLOAD_PROVIDERS")
+        if autoload_keys:
+            from merchants.autoload import load_providers_from_config
+
+            load_providers_from_config(app.config, active=list(autoload_keys))
+
         # Fall back to DummyProvider when nothing has been registered yet.
         if not merchants.list_providers():
             merchants.register_provider(DummyProvider())
 
-        # Default client: first explicitly-supplied provider, or first in registry.
+        # Default client: first explicitly-supplied provider, first autoloaded
+        # provider (in MERCHANTS_AUTOLOAD_PROVIDERS order), or first in registry.
         default_key = all_providers[0].key if all_providers else merchants.list_providers()[0]
         self._client = self._make_client(default_key)
 
