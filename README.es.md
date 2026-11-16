@@ -42,7 +42,7 @@ from quart import Quart
 from flask_merchants import FlaskMerchants
 
 app = Quart(__name__)
-ext = FlaskMerchants(app)   # blueprint asíncrono seleccionado automáticamente
+ext = FlaskMerchants(app)  # blueprint asíncrono seleccionado automáticamente
 ```
 
 Requiere el extra `quart`:
@@ -83,6 +83,7 @@ from flask_merchants.signals import payment_status_changed
 app = Flask(__name__)
 ext = FlaskMerchants(app)
 
+
 @payment_status_changed.connect_via(app)
 def on_state_change(sender, *, payment_id, old_status, new_status, **kwargs):
     print(f"{payment_id}: {old_status} -> {new_status}")
@@ -118,7 +119,9 @@ ext = FlaskMerchants(app, db=db, models=[Pagos])
 # Estilo B – configuración diferida a init_app (patrón application-factory)
 # extensions.py
 from flask_merchants import FlaskMerchants
+
 merchants_ext = FlaskMerchants()
+
 
 # app_factory.py
 def create_app():
@@ -256,15 +259,19 @@ from sqlalchemy import Integer
 from flask_merchants import FlaskMerchants
 from flask_merchants.models import PaymentMixin
 
+
 class Base(DeclarativeBase):
     pass
 
+
 db = SQLAlchemy(model_class=Base)
+
 
 class Pagos(PaymentMixin, db.Model):
     __tablename__ = "pagos"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     # agrega tus propias columnas aquí …
+
 
 app = Flask(__name__)
 ext = FlaskMerchants(app, db=db, models=[Pagos])
@@ -309,9 +316,11 @@ class Pagos(PaymentMixin, db.Model):
     __tablename__ = "pagos"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
+
 class Paiements(PaymentMixin, db.Model):
     __tablename__ = "paiements"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
 
 ext = FlaskMerchants(app, db=db, models=[Pagos, Paiements])
 
@@ -333,7 +342,7 @@ from flask_merchants.contrib.sqla import PaymentModelView
 from flask_admin import Admin
 
 admin = Admin(app)
-admin.add_view(PaymentModelView(Pagos,     db.session, ext=ext, name="Pagos",     endpoint="pagos"))
+admin.add_view(PaymentModelView(Pagos, db.session, ext=ext, name="Pagos", endpoint="pagos"))
 admin.add_view(PaymentModelView(Paiements, db.session, ext=ext, name="Paiements", endpoint="paiements"))
 ```
 
